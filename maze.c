@@ -4,7 +4,7 @@
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
 #define MIN_HEIGHT 5
-#define MIN_HEIGHT 100
+#define MAX_HEIGHT 100
 
 typedef struct __MazeInfo
 {
@@ -29,11 +29,12 @@ void firstPass(const char *fileName, maze *mz){
 
     fgets(buffer, bufferSize, fileName);
 
-    // Check maze width is within bounds
+    // Find first line length
+// FIXME - following code is repeated and could be made into a function
     int len = strlen(buffer);
     if (buffer[len - 1] == '\n') {
-            len--;
-        }
+        len--;
+    }
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH){
         printf("Error: Invalid maze");
@@ -42,38 +43,67 @@ void firstPass(const char *fileName, maze *mz){
     }
     cols = len;
 
+    // Find height
+    while (fgets(buffer, bufferSize, fileName)){
+        rows++;
+        // check all lines are same length
+        int len = strlen(buffer);
+        if (buffer[len - 1] == '\n') {
+            len--;
+        }
+// FIXME - could make a function called "invalid maze error" to avoid repeated code
+        if (len != cols){
+            printf("Error: Invalid maze");
+            fclose(fileName);
+            return 2;
+        }
+    }
+
+    // Check number of lines is within maze height bounds
+    if (rows < MIN_HEIGHT || rows > MAX_HEIGHT){
+        printf("Error: Invalid maze");
+            fclose(fileName);
+            return 2;
+    }
+
+    // Fill height and width into maze struct
+    mz->width = cols;
+    mz->height = rows;
+}
+
+void secondPass(const char *fileName, maze *mz){
+    // Allocate memory for rows and check allocation was successful
+    char **matrix = (char **)malloc(mz->height * sizeof(char *));
+    if (matrix == NULL){
+        printf("Memory allocation failed\n");
+        return 100;
+    }
+    // Allocate memory for columns and check allocation was successful
+    for (int i = 0; i < mz->height; i ++){
+        matrix[i] = (char *)malloc(mz->width * sizeof(char));
+        if (matrix[i] == NULL){
+        printf("Memory allocation failed\n");
+        return 100;
+    }
+    }
 }
 
 void readFileIntoStruct(const char *fileName, maze *mz)
 {
     // open file (error if cant find or open)
-
-     FILE *mazeFile = fopen(fileName, "r");
+    FILE *mazeFile = fopen(fileName, "r");
 
     if (!mazeFile) {
         printf("Error: Could not open file\n");
         return 2;
     }
 
-    // Initialize variables
+    // First Pass - will find height and width and check format of file
+    firstPass(fileName, mz);
 
-    int rows = 0;
-    int matrixSize = 6;
-    int bufferSize = 6;
-    char buffer[bufferSize];
-
-    // First Pass
-
-    char **matrix = (char **)malloc(sizeof(char *) * matrixSize);
-    if (matrix == NULL){
-        perror("memory allocation failed\n");
-        fclose(mazeFile);
-        return 100;
-    }
-
-    while (fgets(buffer, bufferSize, mazeFile)){
-
-        }
+    // Second Pass -  will read file into maze struct
+    fseek(fileName, 0, SEEK_SET);
+    secondPass(fileName, mz);
 
 }
 
