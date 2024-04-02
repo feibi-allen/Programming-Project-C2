@@ -74,6 +74,7 @@ void firstPass(const char *fileName, maze *mz){
 }
 
 void allocateMemory(maze *mz){
+// FIXME - change to realoc
     // Allocate memory for rows and check allocation was successful
     char **matrix = (char **)malloc(mz->height * sizeof(char *));
     if (matrix == NULL){
