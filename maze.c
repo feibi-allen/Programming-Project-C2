@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
@@ -30,6 +31,7 @@ void firstPass(const char *fileName, maze *mz){
     fgets(buffer, bufferSize, fileName);
 
     // Find first line length
+// FIXME - check for invalid characters
 // FIXME - following code is repeated and could be made into a function
     int len = strlen(buffer);
     if (buffer[len - 1] == '\n') {
@@ -71,7 +73,7 @@ void firstPass(const char *fileName, maze *mz){
     mz->height = rows;
 }
 
-void secondPass(const char *fileName, maze *mz){
+void allocateMemory(maze *mz){
     // Allocate memory for rows and check allocation was successful
     char **matrix = (char **)malloc(mz->height * sizeof(char *));
     if (matrix == NULL){
@@ -84,13 +86,26 @@ void secondPass(const char *fileName, maze *mz){
         if (matrix[i] == NULL){
         printf("Memory allocation failed\n");
         return 100;
+        }
     }
+}
+
+void secondPass(const char *fileName, maze *mz){
+    // Set pointer to start of file
+    fseek(fileName, 0, SEEK_SET);
+
+    // Read in lines
+    int rows = 1, cols, bufferSize = 256;
+    char buffer[bufferSize];
+    for (int i = 0; i < mz->height; i++){
+        fgets(buffer, bufferSize, fileName);
+        strcpy(mz->grid)
     }
 }
 
 void readFileIntoStruct(const char *fileName, maze *mz)
 {
-    // open file (error if cant find or open)
+    // Open file (error if cant find or open)
     FILE *mazeFile = fopen(fileName, "r");
 
     if (!mazeFile) {
@@ -101,8 +116,10 @@ void readFileIntoStruct(const char *fileName, maze *mz)
     // First Pass - will find height and width and check format of file
     firstPass(fileName, mz);
 
+    // Allocate Memory bases on first pass
+    allocateMemory(mz);
+
     // Second Pass -  will read file into maze struct
-    fseek(fileName, 0, SEEK_SET);
     secondPass(fileName, mz);
 
 }
