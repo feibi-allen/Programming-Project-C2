@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MIN_WIDTH 5
+#define MAX_WIDTH 100
+#define MIN_HEIGHT 5
+#define MIN_HEIGHT 100
+
 typedef struct __MazeInfo
 {
     int width, height, playerPos[2], start[2], end[2];
@@ -5,7 +13,7 @@ typedef struct __MazeInfo
 
 } maze;
 
-int checkMaze(maze **mz)
+int checkMaze(maze *mz)
 {
     // check each row for S and E and invalid characters
 
@@ -15,27 +23,61 @@ int checkMaze(maze **mz)
 
 }
 
+void firstPass(const char *fileName, maze *mz){
+    int rows = 1, cols, bufferSize = 256;
+    char buffer[bufferSize];
 
-int readFileIntoStruct(const char *fileName, maze **mz)
-{
-    // open file (error if cant find or open)
+    fgets(buffer, bufferSize, fileName);
 
-    // for each line in file
-        // fgets()
-        // check length of line (throw error if inconsistent)
-        // allocate memory for row (not including \n)
-        // initialize each [row][col] to char in file
-    // realloc for every row
-
-    // initialize width and height of maze 
-
-    // check the maze for invalid data and player pos
-
-    // close file
+    // Check maze width is within bounds
+    int len = strlen(buffer);
+    if (buffer[len - 1] == '\n') {
+            len--;
+        }
+    // Check first line is within maze width bounds
+    if (len < MIN_WIDTH || len > MAX_WIDTH){
+        printf("Error: Invalid maze");
+        fclose(fileName);
+        return 2;
+    }
+    cols = len;
 
 }
 
-int freeMaze(maze **mz)
+void readFileIntoStruct(const char *fileName, maze *mz)
+{
+    // open file (error if cant find or open)
+
+     FILE *mazeFile = fopen(fileName, "r");
+
+    if (!mazeFile) {
+        printf("Error: Could not open file\n");
+        return 2;
+    }
+
+    // Initialize variables
+
+    int rows = 0;
+    int matrixSize = 6;
+    int bufferSize = 6;
+    char buffer[bufferSize];
+
+    // First Pass
+
+    char **matrix = (char **)malloc(sizeof(char *) * matrixSize);
+    if (matrix == NULL){
+        perror("memory allocation failed\n");
+        fclose(mazeFile);
+        return 100;
+    }
+
+    while (fgets(buffer, bufferSize, mazeFile)){
+
+        }
+
+}
+
+int freeMaze(maze *mz)
 {
     // check not null
 
@@ -45,7 +87,7 @@ int freeMaze(maze **mz)
 
 }
 
-int displayMaze(maze **mz)
+int displayMaze(maze *mz)
 {
     // for each row
         // for each column
@@ -74,9 +116,18 @@ int main(int argc, char *argv[])
 {   
     // check arguments
 
+    if (argc != 2) {
+        printf("Usage: ./maze <filename>\n");
+        return 1;
+    }
+
     // create maze instance
     
-    // readFileIntoStruct(argv[1],maze)
+    maze maze;
+
+    // readFileIntoStruct
+
+    readFileIntoStruct(argv[1],&maze)
 
     // loop until game exits
 
