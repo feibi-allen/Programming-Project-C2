@@ -62,7 +62,7 @@ rm -f tmp
 # Bad permissions (no permission to access the file)
 # Expected output - "Error: Could not open file"
 
-echo -n "Bad permissions - "
+echo -n "No permission to access file - "
 ((testCounter++))
 chmod -r mazes/perms.txt
 timeout 0.2s ./maze mazes/perms.txt > tmp
@@ -110,7 +110,6 @@ fi
 
 rm -f tmp
 
-# FIXME - right width, right height
 # Maze column is too big (column size is 101)
 # Expected output - "Error: Invalid maze"
 
@@ -133,6 +132,22 @@ rm -f tmp
 echo -n "Bad file (maze column is too small) - "
 ((testCounter++))
 timeout 0.2s ./maze mazes/m5by4.txt > tmp
+if grep -q "Error: Invalid maze" tmp;
+then
+    echo -e "\e[32mPASS\e[0m"
+    ((passCounter++))
+else
+    echo -e "\e[31mFAIL\e[0m"
+fi
+
+rm -f tmp
+
+# Maze row is too big (row size is 101)
+# Expected output - "Error: Invalid maze"
+
+echo -n "Bad file (maze row is too big) - "
+((testCounter++))
+timeout 0.2s ./maze mazes/m101by100.txt > tmp
 if grep -q "Error: Invalid maze" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
@@ -239,6 +254,23 @@ fi
 
 rm -f tmp
 
+# Maze ends in new line
+# Expected output - maze is loaded successfully and message with file name is shown
+
+echo -n "Maze ends with new line - "
+((testCounter++))
+timeout 0.2s ./maze mazes/mNewLineChar.txt > tmp
+if grep -q "maze mazes/m100by100.txt loaded successfully" tmp;
+then
+    echo -e "\e[32mPASS\e[0m"
+    ((passCounter++))
+else
+    echo -e "\e[31mFAIL\e[0m"
+fi
+
+rm -f tmp
+
+
 # Maze is maximum size (100 by 100)
 # Expected output - maze is loaded successfully and message with file name is shown
 
@@ -274,9 +306,7 @@ rm -f tmp
 # Maze is rectangle (columns and rows are not the same value)
 # Expected output - maze is loaded successfully and message with file name is shown
 
-# FIXME - change description of this
-
-echo -n "Wonky rectangle - "
+echo -n "Rectangle with different columns and rows- "
 ((testCounter++))
 timeout 0.2s ./maze mazes/m6by9.txt > tmp
 if grep -q "maze mazes/m6by9.txt loaded successfully" tmp;
@@ -290,8 +320,6 @@ fi
 rm -f tmp
 
 ## User input
-
-# FIXME - lowercase inputs
 
 echo -e "\e[34m\n~~Bad Inputs~~\e[0m"
 
