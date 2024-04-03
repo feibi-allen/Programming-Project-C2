@@ -15,17 +15,7 @@ typedef struct __MazeInfo
 
 } maze;
 
-int checkMaze(maze *mz)
-{
-    // check each row for S and E and invalid characters
-
-    // if two S or E or invalid characters found throw error
-
-    // set player pos to S
-
-}
-
-void firstPass(const char *mazeFile, maze *mz){
+int firstPass(const char *mazeFile, maze *mz){
     int rows = 1, cols, bufferSize = 256;
     char buffer[bufferSize];
 
@@ -58,7 +48,7 @@ void firstPass(const char *mazeFile, maze *mz){
         if (len != cols){
             printf("Error: Invalid maze");
             fclose(mazeFile);
-            return 2;
+            return 3;
         }
     }
 
@@ -66,12 +56,13 @@ void firstPass(const char *mazeFile, maze *mz){
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT){
         printf("Error: Invalid maze");
             fclose(mazeFile);
-            return 2;
+            return 3;
     }
 
     // Fill height and width into maze struct
     mz->width = cols;
     mz->height = rows;
+    return 0;
 }
 
 void allocateMemory(maze *mz){
@@ -104,7 +95,7 @@ void secondPass(const char *mazeFile, maze *mz){
     }
 }
 
-void readFileIntoStruct(const char *fileName, maze *mz)
+int readFileIntoStruct(const char *fileName, maze *mz)
 {
     // Open file (error if cant find or open)
     FILE *mazeFile = fopen(fileName, "r");
@@ -115,7 +106,10 @@ void readFileIntoStruct(const char *fileName, maze *mz)
     }
 
     // First Pass - will find height and width and check format of file
-    firstPass(mazeFile, mz);
+    int returnCode = firstPass(mazeFile, mz);
+    if (returnCode != 0){
+        return returnCode;
+    }
 
     // Allocate Memory bases on first pass
     allocateMemory(mz);
@@ -128,7 +122,7 @@ void readFileIntoStruct(const char *fileName, maze *mz)
 
     // Tell user file successfully loaded
     printf("Maze %s loaded successfully\n");
-
+    return 0;
 }
 
 void freeMazeMemory(maze *mz)
@@ -190,8 +184,11 @@ int main(int argc, char *argv[])
     // Create maze instance
     maze maze;
 
-    // ReadFileIntoStruct
-    readFileIntoStruct(argv[1],&maze);
+    // ReadFileIntoStruct - returns appropreate code if error has occered
+    int returnCode = readFileIntoStruct(argv[1],&maze);
+    if (returnCode != 0){
+        return returnCode;
+    }
 
     // Run game
     while(1){
