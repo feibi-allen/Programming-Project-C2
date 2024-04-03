@@ -1,6 +1,11 @@
+/**
+ * @file maze.c
+ * @author Fei-bi Allen
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <ctype.h>
 
 #define MIN_WIDTH 5
@@ -8,15 +13,22 @@
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
 
+#define EXIT_SUCCESS 0
+#define EXIT_ARG_ERROR 1
+#define EXIT_FILE_ERROR 2
+#define EXIT_MAZE_ERROR 3
+
+// FIXME - add descritions at head of all functions
+
 typedef struct __MazeInfo
 {
     int width, height, playerPos[2];
-    // 1D array means less fragmentation
+    // 1D array means less fragmentation and easier to free
     char *grid;
 
 } maze;
 
-int firstPass(const char *mazeFile, maze *mz)
+int firstPass(FILE *mazeFile, maze *mz)
 {
     int rows = 1, cols, bufferSize = 256;
     char buffer[bufferSize];
@@ -72,7 +84,7 @@ int firstPass(const char *mazeFile, maze *mz)
     return 0;
 }
 
-void allocateMemory(maze *mz)
+int allocateMemory(maze *mz)
 {
     // Allocate memory for rows and check allocation was successful
     mz->grid = (char *)malloc(mz->height * mz->width * sizeof(char));
@@ -81,9 +93,16 @@ void allocateMemory(maze *mz)
         printf("Memory allocation failed\n");
         return 100;
     }
+    return 0;
 }
 
-int secondPass(const char *mazeFile, maze *mz)
+void freeMazeMemory(maze *mz)
+{
+    // FIXME - not need this function anymore
+    free(mz->grid);
+}
+
+int secondPass(FILE *mazeFile, maze *mz)
 {
     // Set pointer to start of file
     fseek(mazeFile, 0, SEEK_SET);
@@ -108,13 +127,13 @@ int secondPass(const char *mazeFile, maze *mz)
             // Set sFound and eFound to true if found
             if (symbol == 'S' && sFound == 0)
             {
-                sFound == 1;
+                sFound = 1;
                 mz->playerPos[0] = j;
                 mz->playerPos[1] = i;
             }
             if (symbol == 'E' && eFound == 0)
             {
-                sFound == 1;
+                eFound = 1;
             }
             // Check if S or E is already found
             if ((symbol == 'S' && sFound == 0) || (symbol == 'E' && eFound == 0))
@@ -125,6 +144,7 @@ int secondPass(const char *mazeFile, maze *mz)
             mz->grid[(i * mz->width) + j] = symbol;
         }
     }
+    return 0;
 }
 
 int readFileIntoStruct(const char *fileName, maze *mz)
@@ -140,16 +160,20 @@ int readFileIntoStruct(const char *fileName, maze *mz)
 
     // First Pass - will find height and width and check format of file
     int returnCode = firstPass(mazeFile, mz);
-    if (returnCode != 0)
+    if (firstPass(mazeFile, mz) != 0)
     {
         return returnCode;
     }
 
     // Allocate Memory bases on first pass
-    allocateMemory(mz);
+    returnCode = allocateMemory(mz);
+    if (returnCode != 0)
+    {
+        return returnCode;
+    }
 
     // Second Pass -  will read file into maze struct and check contense of file
-    int returnCode = secondPass(mazeFile, mz);
+    returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0)
     {
         freeMazeMemory(mz);
@@ -160,19 +184,8 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     fclose(mazeFile);
 
     // Tell user file successfully loaded
-    printf("Maze %s loaded successfully\n");
+    printf("Maze %s loaded successfully\n", fileName);
     return 0;
-}
-
-void freeMazeMemory(maze *mz)
-{
-    // Free array in each row
-    for (int i; i < mz->height; i++)
-    {
-        free(mz->grid[i]);
-    }
-    // free the rows
-    free(mz->grid);
 }
 
 void displayMaze(maze *mz)
@@ -289,11 +302,11 @@ int main(int argc, char *argv[])
         char input = toupper(inputString[0]);
 
         // check move/option char is valid
-        if (inputString[1] != "\n")
+        if (inputString[1] != '\n')
         {
             printf("Error: Invalid move option\n");
         }
-        else if (input != "W" && input != "A" && input != "S" && input != "D" && input != "M")
+        else if (input != 'W' && input != 'A' && input != 'S' && input != 'D' && input != 'M')
         {
             printf("Error: Invalid move option\n");
         }
