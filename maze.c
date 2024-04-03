@@ -10,7 +10,7 @@
 
 typedef struct __MazeInfo
 {
-    int width, height, playerPos[2], start[2], end[2];
+    int width, height, playerPos[2];
     char **grid;
 
 } maze;
@@ -83,6 +83,7 @@ void allocateMemory(maze *mz){
 }
 
 void secondPass(const char *mazeFile, maze *mz){
+    // FIXME - find S and E and set player pos to S and check if there are two E or S
     // Set pointer to start of file
     fseek(mazeFile, 0, SEEK_SET);
 
@@ -135,12 +136,21 @@ void freeMazeMemory(maze *mz)
     free(mz->grid);
 }
 
-int displayMaze(maze *mz)
+void displayMaze(maze *mz)
 {
-    // for each row
-        // for each column
-            // if its playerPos then print X else print char from struct
-        // newline
+    printf("\n");
+    for (int i = 0; i < mz->height; i++){
+        for (int j = 0; j < mz->width; j++){
+            if (mz->playerPos[0] == j && mz->playerPos[1] == i){
+                printf("X");
+            }
+            else {
+                printf("%c", mz->grid[i][j]);
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
 
 int movePlayer(int xMove, int yMove, maze *mz)
