@@ -13,6 +13,7 @@
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
 
+// FIXME - replace returns with this
 #define EXIT_SUCCESS 0
 #define EXIT_ARG_ERROR 1
 #define EXIT_FILE_ERROR 2
@@ -45,7 +46,7 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH)
     {
-        printf("Error: Invalid maze");
+        printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
     }
@@ -64,16 +65,15 @@ int firstPass(FILE *mazeFile, maze *mz)
         // FIXME - could make a function called "invalid maze error" to avoid repeated code
         if (len != cols)
         {
-            printf("Error: Invalid maze");
+            printf("Error: Invalid maze\n");
             fclose(mazeFile);
             return 3;
         }
     }
-
     // Check number of lines is within maze height bounds
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT)
     {
-        printf("Error: Invalid maze");
+        printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
     }
@@ -121,7 +121,7 @@ int secondPass(FILE *mazeFile, maze *mz)
             // Check if char is valid and return error code if not
             if (symbol != 'S' && symbol != 'E' && symbol != '#' && symbol != ' ')
             {
-                printf("Error: Invalid maze");
+                printf("Error: Invalid maze\n");
                 return 3;
             }
             // Set sFound and eFound to true if found
@@ -138,11 +138,15 @@ int secondPass(FILE *mazeFile, maze *mz)
             // Check if S or E is already found
             if ((symbol == 'S' && sFound == 0) || (symbol == 'E' && eFound == 0))
             {
-                printf("Error: Invalid maze");
+                printf("Error: Invalid maze\n");
                 return 3;
             }
             mz->grid[(i * mz->width) + j] = symbol;
         }
+    }
+    if (sFound == 0 || eFound == 0){
+        printf("Error: Invalid maze\n");
+        return EXIT_MAZE_ERROR;
     }
     return 0;
 }
@@ -160,7 +164,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
 
     // First Pass - will find height and width and check format of file
     int returnCode = firstPass(mazeFile, mz);
-    if (firstPass(mazeFile, mz) != 0)
+    if (returnCode != 0)
     {
         return returnCode;
     }
@@ -176,6 +180,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0)
     {
+        printf("return code %d\n",returnCode);
         freeMazeMemory(mz);
         return returnCode;
     }
