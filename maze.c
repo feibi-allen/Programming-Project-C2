@@ -136,7 +136,7 @@ int secondPass(FILE *mazeFile, maze *mz)
                 eFound = 1;
             }
             // Check if S or E is already found
-            if ((symbol == 'S' && sFound == 0) || (symbol == 'E' && eFound == 0))
+            if ((symbol == 'S' && sFound == 1) || (symbol == 'E' && eFound == 1))
             {
                 printf("Error: Invalid maze\n");
                 return 3;
