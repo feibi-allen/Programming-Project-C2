@@ -260,7 +260,7 @@ rm -f tmp
 echo -n "Maze ends with new line - "
 ((testCounter++))
 timeout 0.2s ./maze mazes/mNewLineChar.txt > tmp
-if grep -q "maze mazes/m100by100.txt loaded successfully" tmp;
+if grep -q "Maze mazes/m100by100.txt loaded successfully" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
     ((passCounter++))
@@ -277,7 +277,7 @@ rm -f tmp
 echo -n "Max size - "
 ((testCounter++))
 timeout 0.2s ./maze mazes/m100by100.txt > tmp
-if grep -q "maze mazes/m100by100.txt loaded successfully" tmp;
+if grep -q "Maze mazes/m100by100.txt loaded successfully" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
     ((passCounter++))
@@ -293,7 +293,7 @@ rm -f tmp
 echo -n "Min size - "
 ((testCounter++))
 timeout 0.2s ./maze mazes/m5by5.txt > tmp
-if grep -q "maze mazes/m5by5.txt loaded successfully" tmp;
+if grep -q "Maze mazes/m5by5.txt loaded successfully" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
     ((passCounter++))
@@ -309,7 +309,7 @@ rm -f tmp
 echo -n "Rectangle with different columns and rows- "
 ((testCounter++))
 timeout 0.2s ./maze mazes/m6by9.txt > tmp
-if grep -q "maze mazes/m6by9.txt loaded successfully" tmp;
+if grep -q "Maze mazes/m6by9.txt loaded successfully" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
     ((passCounter++))

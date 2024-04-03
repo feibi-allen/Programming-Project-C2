@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
+#include <ctype.h>
 
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
@@ -41,7 +42,7 @@ void firstPass(const char *mazeFile, maze *mz){
     if (len < MIN_WIDTH || len > MAX_WIDTH){
         printf("Error: Invalid maze");
         fclose(mazeFile);
-        return 2;
+        return 3;
     }
     cols = len;
 
@@ -125,9 +126,12 @@ void readFileIntoStruct(const char *fileName, maze *mz)
     // Close file
     fclose(mazeFile);
 
+    // Tell user file successfully loaded
+    printf("Maze %s loaded successfully\n");
+
 }
 
-int freeMazeMemory(maze *mz)
+void freeMazeMemory(maze *mz)
 {
     // Free array in each row
     for (int i; i<mz->height; i++){
@@ -163,33 +167,59 @@ int movePlayer(char move)
 
 }
 
+void inputSwitch(char input){
+    switch (input)
+    {
+    case /* constant-expression */:
+        /* code */
+        break;
+    
+    default:
+        break;
+    }
+}
+
 int main(int argc, char *argv[])
 {   
-    // check arguments
-
+    // Check arguments
     if (argc != 2) {
         printf("Usage: ./maze <filename>\n");
         return 1;
     }
 
-    // create maze instance
-    
+    // Create maze instance
     maze maze;
 
-    // readFileIntoStruct
-
+    // ReadFileIntoStruct
     readFileIntoStruct(argv[1],&maze);
 
-    // loop until game exits
-
+    // Run game
+    while(1){
+        char inputString[3];
         // ask player for move/option
+        printf("Enter input (W,A,S,D,M)\n");
+        scanf("%2s",inputString);
+        char input = toupper(inputString[0]);
 
         // check move/option char is valid
+        if (inputString[1] != "\n"){
+            printf("Error: Invalid move option\n");
+        }
+        else if (input != "W" && input != "A" && input != "S" && input != "D" && input != "M"){
+                printf("Error: Invalid move option\n");
+        }
+        // switch for each input case
+        else {
+            case
+        }
 
         // if M display maze
 
         // if move char is valid movePlayer
 
-    // free struct when game ends
+        // free struct when game ends
+    }
+
+        
     freeMazeMemory(&maze);
 }
