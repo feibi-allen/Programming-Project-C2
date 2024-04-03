@@ -11,7 +11,8 @@
 typedef struct __MazeInfo
 {
     int width, height, playerPos[2];
-    char **grid;
+    // 1D array means less fragmentation
+    char *grid;
 
 } maze;
 
@@ -66,23 +67,16 @@ int firstPass(const char *mazeFile, maze *mz){
 }
 
 void allocateMemory(maze *mz){
+    // FIXME - change to a 1D array
     // Allocate memory for rows and check allocation was successful
-    mz->grid = (char **)malloc(mz->height * sizeof(char *));
+    mz->grid = (char *)malloc(mz->height* mz->width * sizeof(char));
     if (mz->grid == NULL){
         printf("Memory allocation failed\n");
         return 100;
     }
-    // Allocate memory for columns and check allocation was successful
-    for (int i = 0; i < mz->height; i ++){
-        mz->grid[i] = (char *)malloc(mz->width * sizeof(char));
-        if (mz->grid[i] == NULL){
-        printf("Memory allocation failed\n");
-        return 100;
-        }
-    }
 }
 
-void secondPass(const char *mazeFile, maze *mz){
+int secondPass(const char *mazeFile, maze *mz){
     // FIXME - find S and E and set player pos to S and check if there are two E or S
     // Set pointer to start of file
     fseek(mazeFile, 0, SEEK_SET);
@@ -90,9 +84,21 @@ void secondPass(const char *mazeFile, maze *mz){
     // Read in lines
     int bufferSize = 256;
     char buffer[bufferSize];
+    int sFound = 0, eFound = 0;
+
     for (int i = 0; i < mz->height; i++){
         fgets(buffer, bufferSize, mazeFile);
-        strncpy(mz->grid[i],buffer,mz->width);
+        for (int j = 0; j < mz->width; j++){
+            // Set sFound and eFound to true if found
+            if (toupper(buffer[j]) == 'S' && sFound == 0){
+                sFound == 1;
+            }
+            if (toupper(buffer[j]) == 'E' && eFound == 0){
+                sFound == 1;
+            }
+            // FIXME - check if S or E is already found
+            // FIXME - check if symbol is not valid
+        }
     }
 }
 
@@ -115,8 +121,12 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     // Allocate Memory bases on first pass
     allocateMemory(mz);
 
-    // Second Pass -  will read file into maze struct
-    secondPass(mazeFile, mz);
+    // Second Pass -  will read file into maze struct and check contense of file
+    int returnCode = secondPass(mazeFile, mz);
+    if (returnCode != 0){
+        return returnCode;
+    }
+    
 
     // Close file
     fclose(mazeFile);
@@ -145,7 +155,7 @@ void displayMaze(maze *mz)
                 printf("X");
             }
             else {
-                printf("%c", mz->grid[i][j]);
+                printf("%c", mz->grid[(i*mz->width) + j]);
             }
         }
         printf("\n");
@@ -170,13 +180,13 @@ int movePlayer(int xMove, int yMove, maze *mz)
         return -1;
     }
     // Check move isnt into a wall
-    if (mz->grid[xPos][yPos] == '#'){
+    if (mz->grid[(xPos*mz->width) + yPos] == '#'){
         printf("You can't move there.\n");
         return -1;
     }
     
     // Check if move ends the game
-    if (mz->grid[xPos][yPos] == 'E'){
+    if (mz->grid[(xPos*mz->width) + yPos] == 'E'){
         printf("Congratulations! You finished the maze.\n");
         return 0;
     }
