@@ -145,43 +145,55 @@ int displayMaze(maze *mz)
 
 int movePlayer(int xMove, int yMove, maze *mz)
 {
-    // switch case for each move
-        // calculate new player pos based on the move
+    int xPos = mz->playerPos[0]+xMove;
+    int yPos = mz->playerPos[1]+yMove;
 
-    // check move is valid 
-        // check coord is on map
-        // check pos is not a wall
+    // Check move is valid
+    // Check if move is off map (x axis)
+    if (xPos < 0 || xPos > (mz->width - 1)){
+        printf("You can't move there.\n");
+        return -1;
+    }
+    // Check if move is off map (y axis)
+    if (yPos < 0 || yPos > (mz->height - 1)){
+        printf("You can't move there.\n");
+        return -1;
+    }
+    // Check move isnt into a wall
+    if (mz->grid[xPos][yPos] == '#'){
+        printf("You can't move there.\n");
+        return -1;
+    }
+    
+    // Check if move ends the game
+    if (mz->grid[xPos][yPos] == 'E'){
+        printf("Congratulations! You finished the maze.\n");
+        return 0;
+    }
 
-    // check if player is about to move to end coord
-        // if they are then print congrats and exit
-
-    // update player pos
-
-
+    // Move the player
+    mz->playerPos[0] += xMove;
+    mz->playerPos[1] += yMove;
+    return -1;
 }
 
 int inputSwitch(char input, maze *mz){
     switch (input)
     {
     case 'M':
-    case 'm':
         displayMaze(mz);
         return -1;
         break;
     case 'W':
-    case 'w':
         return movePlayer(1,0,mz);
         break;
     case 'A':
-    case 'a':
         return movePlayer(0,-1,mz);
         break;
     case 'S':
-    case 's':
         return movePlayer(-1,0,mz);
         break;
     case 'D':
-    case 'd':
         return movePlayer(0,1,mz);
         break;
     default:
