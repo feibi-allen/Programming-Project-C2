@@ -160,28 +160,32 @@ int movePlayer(int xMove, int yMove, maze *mz)
 
 }
 
-void inputSwitch(char input, maze *mz){
+int inputSwitch(char input, maze *mz){
     switch (input)
     {
     case 'M':
     case 'm':
         displayMaze(mz);
+        return -1;
         break;
     case 'W':
     case 'w':
-        movePlayer(1,0,mz);
+        return movePlayer(1,0,mz);
         break;
     case 'A':
     case 'a':
-        movePlayer(0,-1,mz);
+        return movePlayer(0,-1,mz);
         break;
     case 'S':
     case 's':
-        movePlayer(-1,0,mz);
+        return movePlayer(-1,0,mz);
         break;
     case 'D':
     case 'd':
-        movePlayer(0,1,mz);
+        return movePlayer(0,1,mz);
+        break;
+    default:
+        return 100;
         break;
     }
 }
@@ -220,16 +224,17 @@ int main(int argc, char *argv[])
         }
         // switch for each input case
         else {
-            case
+            returnCode = inputSwitch(input, &maze);
+            // End game with win
+            if (returnCode == 0){
+                freeMazeMemory(&maze);
+                return 0;
+            }
+            // Return return code if error has occered
+            else if (returnCode != -1){
+                return returnCode;
+            }
+            // Else if return code was -1, continue game
         }
-
-        // if M display maze
-
-        // if move char is valid movePlayer
-
-        // free struct when game ends
     }
-
-        
-    freeMazeMemory(&maze);
 }
