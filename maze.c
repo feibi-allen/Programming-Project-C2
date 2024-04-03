@@ -23,7 +23,6 @@ int firstPass(const char *mazeFile, maze *mz){
     fgets(buffer, bufferSize, mazeFile);
 
     // Find first line length
-// FIXME - check for invalid characters
 // FIXME - following code is repeated and could be made into a function
     int len = strlen(buffer);
     if (buffer[len - 1] == '\n') {
@@ -67,7 +66,6 @@ int firstPass(const char *mazeFile, maze *mz){
 }
 
 void allocateMemory(maze *mz){
-    // FIXME - change to a 1D array
     // Allocate memory for rows and check allocation was successful
     mz->grid = (char *)malloc(mz->height* mz->width * sizeof(char));
     if (mz->grid == NULL){
@@ -77,7 +75,6 @@ void allocateMemory(maze *mz){
 }
 
 int secondPass(const char *mazeFile, maze *mz){
-    // FIXME - find S and E and set player pos to S and check if there are two E or S
     // Set pointer to start of file
     fseek(mazeFile, 0, SEEK_SET);
 
@@ -89,15 +86,27 @@ int secondPass(const char *mazeFile, maze *mz){
     for (int i = 0; i < mz->height; i++){
         fgets(buffer, bufferSize, mazeFile);
         for (int j = 0; j < mz->width; j++){
+            char symbol = toupper(buffer[j]);
+            // Check if char is valid and return error code if not
+            if (symbol != 'S' && symbol != 'E' && symbol != '#' && symbol != ' '){
+                printf("Error: Invalid maze");
+                return 3;
+            }
             // Set sFound and eFound to true if found
-            if (toupper(buffer[j]) == 'S' && sFound == 0){
+            if (symbol == 'S' && sFound == 0){
+                sFound == 1;
+                mz->playerPos[0] = j;
+                mz->playerPos[1] = i;
+            }
+            if (symbol == 'E' && eFound == 0){
                 sFound == 1;
             }
-            if (toupper(buffer[j]) == 'E' && eFound == 0){
-                sFound == 1;
+            // Check if S or E is already found
+            if ((symbol == 'S' && sFound == 0)||(symbol == 'E' && eFound == 0)){
+                printf("Error: Invalid maze");
+                return 3;
             }
-            // FIXME - check if S or E is already found
-            // FIXME - check if symbol is not valid
+            mz->grid[(i*mz->width)+j] = symbol;
         }
     }
 }
@@ -124,6 +133,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     // Second Pass -  will read file into maze struct and check contense of file
     int returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0){
+        freeMazeMemory(mz);
         return returnCode;
     }
     
