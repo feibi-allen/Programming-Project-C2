@@ -133,7 +133,6 @@ void freeMazeMemory(maze *mz)
     }
     // free the rows
     free(mz->grid);
-
 }
 
 int displayMaze(maze *mz)
@@ -144,7 +143,7 @@ int displayMaze(maze *mz)
         // newline
 }
 
-int movePlayer(char move)
+int movePlayer(int xMove, int yMove, maze *mz)
 {
     // switch case for each move
         // calculate new player pos based on the move
@@ -161,14 +160,28 @@ int movePlayer(char move)
 
 }
 
-void inputSwitch(char input){
+void inputSwitch(char input, maze *mz){
     switch (input)
     {
-    case /* constant-expression */:
-        /* code */
+    case 'M':
+    case 'm':
+        displayMaze(mz);
         break;
-    
-    default:
+    case 'W':
+    case 'w':
+        movePlayer(1,0,mz);
+        break;
+    case 'A':
+    case 'a':
+        movePlayer(0,-1,mz);
+        break;
+    case 'S':
+    case 's':
+        movePlayer(-1,0,mz);
+        break;
+    case 'D':
+    case 'd':
+        movePlayer(0,1,mz);
         break;
     }
 }
