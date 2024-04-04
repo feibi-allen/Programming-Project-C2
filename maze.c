@@ -33,38 +33,24 @@ int firstPass(FILE *mazeFile, maze *mz)
 {
     int rows = 1, cols, bufferSize = 256;
     char buffer[bufferSize];
-    int previousLen = 0;
-    char currentChar = fgetc(mazeFile);
-
-    while (currentChar != '\n' && currentChar != EOF){
-        printf("current char = %c\n", currentChar);
-        if (currentChar != '\r'){
-            previousLen++;
-        }
-        currentChar = fgetc(mazeFile);
-    }
-    printf("character count = %d\n",previousLen);
 
     fgets(buffer, bufferSize, mazeFile);
     // Find first line length
     // FIXME - following code is repeated and could be made into a function
     int len = strlen(buffer);
-    //remove
-        //printf("buffer = %sfin\n", buffer);
-        printf("len = %d\n",len);
+
     if (buffer[len - 1] == '\n')
     {
-        //remove
-        printf("remving last\n");
         len--;
     }
-    //remove
-    //printf("buffer = %sfin\n", buffer);
+    if (buffer[len - 1] == '\r')
+    {
+        len--;
+    }
+
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH)
     {
-        //remove
-        printf("width out of bounds (len = %d)\n",len);
         printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
@@ -74,25 +60,21 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Find height
     while (fgets(buffer, bufferSize, mazeFile))
     {
-        //remove
-        //printf("buffer = %sfin\n", buffer);
         rows++;
         // check all lines are same length
         int len = strlen(buffer);
-        //remove
-        printf("len before n removal = %d\n",len);
         if (buffer[len - 1] == '\n')
         {
             len--;
         }
-        //remove
-        printf("len after n removal = %d\n",len);
+        if (buffer[len - 1] == '\r')
+        {
+            len--;
+        }   
+
         // FIXME - could make a function called "invalid maze error" to avoid repeated code
         if (len != cols)
         {
-            //remove
-            printf("inconsistent, row = %d,  len = %d, cols = %d\n",rows, len, cols);
-            printf("buffer = %sfin\n", buffer);
             printf("Error: Invalid maze\n");
             fclose(mazeFile);
             return 3;
@@ -101,14 +83,10 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Check number of lines is within maze height bounds
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT)
     {
-        //remove
-        printf("height out of bounds (rows = %d)\n",len);
         printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
     }
-    //remove
-    printf("width = %d, height = %d\n", len, rows);
     // Fill height and width into maze struct
     mz->width = cols;
     mz->height = rows;
