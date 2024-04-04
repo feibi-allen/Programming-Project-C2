@@ -35,17 +35,25 @@ int firstPass(FILE *mazeFile, maze *mz)
     char buffer[bufferSize];
 
     fgets(buffer, bufferSize, mazeFile);
-
     // Find first line length
     // FIXME - following code is repeated and could be made into a function
     int len = strlen(buffer);
+    //remove
+        //printf("buffer = %sfin\n", buffer);
+        printf("len = %d\n",len);
     if (buffer[len - 1] == '\n')
     {
+        //remove
+        printf("remving last\n");
         len--;
     }
+    //remove
+    //printf("buffer = %sfin\n", buffer);
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH)
     {
+        //remove
+        printf("width out of bounds (len = %d)\n",len);
         printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
@@ -55,16 +63,25 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Find height
     while (fgets(buffer, bufferSize, mazeFile))
     {
+        //remove
+        //printf("buffer = %sfin\n", buffer);
         rows++;
         // check all lines are same length
         int len = strlen(buffer);
+        //remove
+        printf("len before n removal = %d\n",len);
         if (buffer[len - 1] == '\n')
         {
             len--;
         }
+        //remove
+        printf("len after n removal = %d\n",len);
         // FIXME - could make a function called "invalid maze error" to avoid repeated code
         if (len != cols)
         {
+            //remove
+            printf("inconsistent, row = %d,  len = %d, cols = %d\n",rows, len, cols);
+            printf("buffer = %sfin\n", buffer);
             printf("Error: Invalid maze\n");
             fclose(mazeFile);
             return 3;
@@ -73,11 +90,14 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Check number of lines is within maze height bounds
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT)
     {
+        //remove
+        printf("height out of bounds (rows = %d)\n",len);
         printf("Error: Invalid maze\n");
         fclose(mazeFile);
         return 3;
     }
-
+    //remove
+    printf("width = %d, height = %d\n", len, rows);
     // Fill height and width into maze struct
     mz->width = cols;
     mz->height = rows;
@@ -120,24 +140,24 @@ int secondPass(FILE *mazeFile, maze *mz)
             char symbol = toupper(buffer[j]);
             // Check if char is valid and return error code if not
             if (symbol != 'S' && symbol != 'E' && symbol != '#' && symbol != ' ')
-            {
+            {   
                 printf("Error: Invalid maze\n");
                 return 3;
             }
             // Set sFound and eFound to true if found
-            if (symbol == 'S' && sFound == 0)
+            else if (symbol == 'S' && sFound == 0)
             {
                 sFound = 1;
                 mz->playerPos[0] = j;
                 mz->playerPos[1] = i;
             }
-            if (symbol == 'E' && eFound == 0)
-            {
+            else if (symbol == 'E' && eFound == 0)
+            {  
                 eFound = 1;
             }
             // Check if S or E is already found
-            if ((symbol == 'S' && sFound == 1) || (symbol == 'E' && eFound == 1))
-            {
+            else if ((symbol == 'S' && sFound == 1) || (symbol == 'E' && eFound == 1))
+            {   
                 printf("Error: Invalid maze\n");
                 return 3;
             }
@@ -145,6 +165,7 @@ int secondPass(FILE *mazeFile, maze *mz)
         }
     }
     if (sFound == 0 || eFound == 0){
+        printf("no S or E\n");
         printf("Error: Invalid maze\n");
         return EXIT_MAZE_ERROR;
     }
@@ -233,14 +254,14 @@ int movePlayer(int xMove, int yMove, maze *mz)
         return -1;
     }
     // Check move isnt into a wall
-    if (mz->grid[(xPos * mz->width) + yPos] == '#')
+    if (mz->grid[(yPos * mz->width) + xPos] == '#')
     {
         printf("You can't move there.\n");
         return -1;
     }
 
     // Check if move ends the game
-    if (mz->grid[(xPos * mz->width) + yPos] == 'E')
+    if (mz->grid[(yPos * mz->width) + xPos] == 'E')
     {
         printf("Congratulations! You finished the maze.\n");
         return 0;
@@ -261,16 +282,16 @@ int inputSwitch(char input, maze *mz)
         return -1;
         break;
     case 'W':
-        return movePlayer(1, 0, mz);
-        break;
-    case 'A':
         return movePlayer(0, -1, mz);
         break;
-    case 'S':
+    case 'A':
         return movePlayer(-1, 0, mz);
         break;
+    case 'S':
+        return movePlayer(0, 01, mz);
+        break;
     case 'D':
-        return movePlayer(0, 1, mz);
+        return movePlayer(1, 0, mz);
         break;
     default:
         return 100;
@@ -300,14 +321,14 @@ int main(int argc, char *argv[])
     // Run game
     while (1)
     {
-        char inputString[3];
+        char inputString[2];
         // ask player for move/option
         printf("Enter input (W,A,S,D,M)\n");
         scanf("%2s", inputString);
         char input = toupper(inputString[0]);
 
         // check move/option char is valid
-        if (inputString[1] != '\n')
+        if (inputString[1] != '\0')
         {
             printf("Error: Invalid move option\n");
         }

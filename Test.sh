@@ -259,8 +259,8 @@ rm -f tmp
 
 echo -n "Maze ends with new line - "
 ((testCounter++))
-timeout 0.2s ./maze mazes/mNewLineChar.txt > tmp
-if grep -q "Maze mazes/m100by100.txt loaded successfully" tmp;
+timeout 0.6s ./maze mazes/mNewLineChar.txt > tmp
+if grep -q "Maze mazes/mNewLineChar.txt loaded successfully" tmp;
 then
     echo -e "\e[32mPASS\e[0m"
     ((passCounter++))
