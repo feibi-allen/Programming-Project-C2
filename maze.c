@@ -33,6 +33,17 @@ int firstPass(FILE *mazeFile, maze *mz)
 {
     int rows = 1, cols, bufferSize = 256;
     char buffer[bufferSize];
+    int previousLen = 0;
+    char currentChar = fgetc(mazeFile);
+
+    while (currentChar != '\n' && currentChar != EOF){
+        printf("current char = %c\n", currentChar);
+        if (currentChar != '\r'){
+            previousLen++;
+        }
+        currentChar = fgetc(mazeFile);
+    }
+    printf("character count = %d\n",previousLen);
 
     fgets(buffer, bufferSize, mazeFile);
     // Find first line length
