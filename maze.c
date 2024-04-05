@@ -67,7 +67,7 @@ int invalidMaseError(FILE *mazeFile)
  * check h and w is within acceptable range, ensure all rows are same length
  * @param mazeFile FILE containing the maze
  * @param mz pointer to maze struct
- * @return int - error code (0 is used if no error but will not cause program to exit)
+ * @return int - error code 
  */
 
 int firstPass(FILE *mazeFile, maze *mz)
@@ -112,7 +112,7 @@ int firstPass(FILE *mazeFile, maze *mz)
 /**
  * @brief dynamically allocate memory based on height and width found in first pass
  * @param mz pointer to maze struct
- * @return int - error code (0 is used if no error but will not cause program to exit)
+ * @return int - error code
  */
 
 int allocateMemory(maze *mz)
@@ -131,7 +131,7 @@ int allocateMemory(maze *mz)
  * @brief assigns characters to the maze grid array, checks each character is valid, checks there is only one S and E
  * @param mazeFile FILE containing the maze
  * @param mz pointer to maze struct
- * @return int - error code (0 is used if no error but will not cause program to exit)
+ * @return int - error code
  */
 
 int secondPass(FILE *mazeFile, maze *mz)
@@ -189,7 +189,7 @@ int secondPass(FILE *mazeFile, maze *mz)
  * @brief reads from file into maze grid
  * @param fileName string containing the name of the file
  * @param mz pointer to maze struct
- * @return int - error code (0 is used if no error but will not cause program to exit)
+ * @return int - error code
  */
 
 int readFileIntoStruct(const char *fileName, maze *mz)
@@ -268,7 +268,8 @@ void displayMaze(maze *mz)
  * @brief validates move and performs movement in specfied direction 
  * @param xMove horizontal movement direction (-1  = left, 1 = right)
  * @param mz pointer to maze struct
- * @return int - error code (0 is used if no error but will not cause program to exit)
+ * @return int - error code (FUNCTION_SUCCESS returned if there is no error but game isn't complete,
+ * EXIT_SUCCESS returned if game is complete)
  */
 
 int movePlayer(int xMove, int yMove, maze *mz)
@@ -308,6 +309,14 @@ int movePlayer(int xMove, int yMove, maze *mz)
     mz->playerPos[1] += yMove;
     return FUNCTION_SUCCESS;
 }
+
+/**
+ * @brief calls game option functions based on user input
+ * @param input char - users input
+ * @param mz pointer to maze struct
+ * @return int - error code (FUNCTION_SUCCESS returned if there is no error but game isn't complete,
+ * EXIT_SUCCESS returned if game is complete)
+ */
 
 int inputSwitch(char input, maze *mz)
 {
@@ -361,33 +370,33 @@ int main(int argc, char *argv[])
         // ask player for move/option
         printf("Enter input (W,A,S,D,M)\n");
         scanf("%2s", inputString);
-        char input = toupper(inputString[0]);
 
         // check move/option char is valid
         if (inputString[1] != '\0')
         {
             printf("Error: Invalid move option\n");
+            continue;
         }
-        else if (input != 'W' && input != 'A' && input != 'S' && input != 'D' && input != 'M')
+
+        char input = toupper(inputString[0]);
+        if (input != 'W' && input != 'A' && input != 'S' && input != 'D' && input != 'M')
         {
             printf("Error: Invalid move option\n");
+            continue;
         }
+
         // switch for each input case
-        else
+        returnCode = inputSwitch(input, &maze);
+        // End game with win
+        if (returnCode == 0)
         {
-            returnCode = inputSwitch(input, &maze);
-            // End game with win
-            if (returnCode == 0)
-            {
-                free(maze.grid);
-                return EXIT_SUCCESS;
-            }
-            // Return return code if error has occered
-            else if (returnCode != -1)
-            {
-                return returnCode;
-            }
-            // Else if return code was -1, continue game
+            free(maze.grid);
+            return EXIT_SUCCESS;
+        }
+        // Return return code if error has occered
+        if (returnCode != -1)
+        {
+            return returnCode;
         }
     }
 }
