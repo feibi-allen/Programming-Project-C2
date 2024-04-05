@@ -17,6 +17,7 @@
 #define EXIT_ARG_ERROR 1
 #define EXIT_FILE_ERROR 2
 #define EXIT_MAZE_ERROR 3
+#define FUNCTION_SUCCESS -1
 
 // FIXME - add descritions at head of all functions
 
@@ -105,7 +106,7 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Fill height and width into maze struct
     mz->width = cols;
     mz->height = rows;
-    return EXIT_SUCCESS;
+    return FUNCTION_SUCCESS;
 }
 
 /**
@@ -123,7 +124,7 @@ int allocateMemory(maze *mz)
         printf("Memory allocation failed\n");
         return 100;
     }
-    return EXIT_SUCCESS;
+    return FUNCTION_SUCCESS;
 }
 
 /**
@@ -181,7 +182,7 @@ int secondPass(FILE *mazeFile, maze *mz)
         printf("Error: Invalid maze\n");
         return EXIT_MAZE_ERROR;
     }
-    return EXIT_SUCCESS;
+    return FUNCTION_SUCCESS;
 }
 
 /**
@@ -204,21 +205,21 @@ int readFileIntoStruct(const char *fileName, maze *mz)
 
     // First Pass - will find height and width and check they are winith bounds
     int returnCode = firstPass(mazeFile, mz);
-    if (returnCode != 0)
+    if (returnCode != -1)
     {
         return returnCode;
     }
 
     // Allocate Memory bases on first pass
     returnCode = allocateMemory(mz);
-    if (returnCode != 0)
+    if (returnCode != -1)
     {
         return returnCode;
     }
 
     // Second Pass -  will read file into maze struct and check contense of file
     returnCode = secondPass(mazeFile, mz);
-    if (returnCode != 0)
+    if (returnCode != -1)
     {
         if (mz->grid != NULL)
         {
@@ -234,7 +235,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
 
     // Tell user file successfully loaded
     printf("Maze %s loaded successfully\n", fileName);
-    return EXIT_SUCCESS;
+    return FUNCTION_SUCCESS;
 }
 
 /**
@@ -280,19 +281,19 @@ int movePlayer(int xMove, int yMove, maze *mz)
     if (xPos < 0 || xPos > (mz->width - 1))
     {
         printf("You can't move there.\n");
-        return -1;
+        return FUNCTION_SUCCESS;
     }
     // Check if move is off map (y axis)
     if (yPos < 0 || yPos > (mz->height - 1))
     {
         printf("You can't move there.\n");
-        return -1;
+        return FUNCTION_SUCCESS;
     }
     // Check move isnt into a wall
     if (mz->grid[(yPos * mz->width) + xPos] == '#')
     {
         printf("You can't move there.\n");
-        return -1;
+        return FUNCTION_SUCCESS;
     }
 
     // Check if move ends the game
@@ -305,7 +306,7 @@ int movePlayer(int xMove, int yMove, maze *mz)
     // Move the player
     mz->playerPos[0] += xMove;
     mz->playerPos[1] += yMove;
-    return -1;
+    return FUNCTION_SUCCESS;
 }
 
 int inputSwitch(char input, maze *mz)
@@ -314,7 +315,7 @@ int inputSwitch(char input, maze *mz)
     {
     case 'M':
         displayMaze(mz);
-        return -1;
+        return FUNCTION_SUCCESS;
         break;
     case 'W':
         return movePlayer(0, -1, mz);
@@ -348,7 +349,7 @@ int main(int argc, char *argv[])
 
     // ReadFileIntoStruct - returns appropreate code if error has occered
     int returnCode = readFileIntoStruct(argv[1], &maze);
-    if (returnCode != 0)
+    if (returnCode != -1)
     {
         return returnCode;
     }
