@@ -41,7 +41,7 @@ int getStringLen(char *buffer){
     return len;
 }
 
-void invalidMaseError(FILE *mazeFile){
+int invalidMaseError(FILE *mazeFile){
     printf("Error: Invalid maze\n");
     fclose(mazeFile);
     return EXIT_MAZE_ERROR;
@@ -59,7 +59,7 @@ int firstPass(FILE *mazeFile, maze *mz)
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH)
     {
-        invalidMaseError(mazeFile);
+        return invalidMaseError(mazeFile);
     }
     cols = len;
 
@@ -72,13 +72,13 @@ int firstPass(FILE *mazeFile, maze *mz)
 
         if (len != cols)
         {
-            invalidMaseError(mazeFile);
+            return invalidMaseError(mazeFile);
         }
     }
     // Check number of lines is within maze height bounds
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT)
     {
-        invalidMaseError(mazeFile);
+        return invalidMaseError(mazeFile);
     }
     // Fill height and width into maze struct
     mz->width = cols;
@@ -178,7 +178,11 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0)
     {
-        free(mz->grid);
+        if (mz->grid != NULL){
+            free(mz->grid);
+            mz->grid = NULL;
+        }
+
         return returnCode;
     }
 
