@@ -28,7 +28,14 @@ typedef struct __MazeInfo
 
 } maze;
 
-int getStringLen(char *buffer){
+/**
+ * @brief Find number of characters in a line of the file (not including '\n' or '\r')
+ * @param buffer string containing one line in the file
+ * @return int - number of characters
+ */
+
+int getStringLen(char *buffer)
+{
     int len = strlen(buffer);
     if (buffer[len - 1] == '\n')
     {
@@ -41,11 +48,26 @@ int getStringLen(char *buffer){
     return len;
 }
 
-int invalidMaseError(FILE *mazeFile){
+/**
+ * @brief Print error message, close the file, and return error code
+ * @param mazeFile FILE containing the maze
+ * @return int - error code
+ */
+
+int invalidMaseError(FILE *mazeFile)
+{
     printf("Error: Invalid maze\n");
     fclose(mazeFile);
     return EXIT_MAZE_ERROR;
 }
+
+/**
+ * @brief Find the height(h) and width(w) of the maze file and assign to maze struct,
+ * check h and w is within acceptable range, ensure all rows are same length
+ * @param mazeFile FILE containing the maze
+ * @param mz pointer to maze struct
+ * @return int - error code (0 is used if no error but will not cause program to exit)
+ */
 
 int firstPass(FILE *mazeFile, maze *mz)
 {
@@ -86,6 +108,12 @@ int firstPass(FILE *mazeFile, maze *mz)
     return EXIT_SUCCESS;
 }
 
+/**
+ * @brief dynamically allocate memory based on height and width found in first pass
+ * @param mz pointer to maze struct
+ * @return int - error code (0 is used if no error but will not cause program to exit)
+ */
+
 int allocateMemory(maze *mz)
 {
     // Allocate memory for rows and check allocation was successful
@@ -97,6 +125,13 @@ int allocateMemory(maze *mz)
     }
     return EXIT_SUCCESS;
 }
+
+/**
+ * @brief assigns characters to the maze grid array, checks each character is valid, checks there is only one S and E
+ * @param mazeFile FILE containing the maze
+ * @param mz pointer to maze struct
+ * @return int - error code (0 is used if no error but will not cause program to exit)
+ */
 
 int secondPass(FILE *mazeFile, maze *mz)
 {
@@ -149,6 +184,13 @@ int secondPass(FILE *mazeFile, maze *mz)
     return EXIT_SUCCESS;
 }
 
+/**
+ * @brief reads from file into maze grid
+ * @param fileName string containing the name of the file
+ * @param mz pointer to maze struct
+ * @return int - error code (0 is used if no error but will not cause program to exit)
+ */
+
 int readFileIntoStruct(const char *fileName, maze *mz)
 {
     // Open file (error if cant find or open)
@@ -178,7 +220,8 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0)
     {
-        if (mz->grid != NULL){
+        if (mz->grid != NULL)
+        {
             free(mz->grid);
             mz->grid = NULL;
         }
@@ -193,6 +236,11 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     printf("Maze %s loaded successfully\n", fileName);
     return EXIT_SUCCESS;
 }
+
+/**
+ * @brief Prints the maze
+ * @param mz pointer to maze struct
+ */
 
 void displayMaze(maze *mz)
 {
@@ -214,6 +262,13 @@ void displayMaze(maze *mz)
     }
     printf("\n");
 }
+
+/**
+ * @brief validates move and performs movement in specfied direction 
+ * @param xMove horizontal movement direction (-1  = left, 1 = right)
+ * @param mz pointer to maze struct
+ * @return int - error code (0 is used if no error but will not cause program to exit)
+ */
 
 int movePlayer(int xMove, int yMove, maze *mz)
 {
