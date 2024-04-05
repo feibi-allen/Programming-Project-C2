@@ -13,7 +13,6 @@
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
 
-// FIXME - replace returns with this
 #define EXIT_SUCCESS 0
 #define EXIT_ARG_ERROR 1
 #define EXIT_FILE_ERROR 2
@@ -29,16 +28,8 @@ typedef struct __MazeInfo
 
 } maze;
 
-int firstPass(FILE *mazeFile, maze *mz)
-{
-    int rows = 1, cols, bufferSize = 256;
-    char buffer[bufferSize];
-
-    fgets(buffer, bufferSize, mazeFile);
-    // Find first line length
-    // FIXME - following code is repeated and could be made into a function
+int getStringLen(char *buffer){
     int len = strlen(buffer);
-
     if (buffer[len - 1] == '\n')
     {
         len--;
@@ -47,13 +38,28 @@ int firstPass(FILE *mazeFile, maze *mz)
     {
         len--;
     }
+    return len;
+}
+
+void invalidMaseError(FILE *mazeFile){
+    printf("Error: Invalid maze\n");
+    fclose(mazeFile);
+    return EXIT_MAZE_ERROR;
+}
+
+int firstPass(FILE *mazeFile, maze *mz)
+{
+    int rows = 1, cols, bufferSize = 256;
+    char buffer[bufferSize];
+
+    fgets(buffer, bufferSize, mazeFile);
+    // Find first line length
+    int len = getStringLen(buffer);
 
     // Check first line is within maze width bounds
     if (len < MIN_WIDTH || len > MAX_WIDTH)
     {
-        printf("Error: Invalid maze\n");
-        fclose(mazeFile);
-        return 3;
+        invalidMaseError(mazeFile);
     }
     cols = len;
 
@@ -62,35 +68,22 @@ int firstPass(FILE *mazeFile, maze *mz)
     {
         rows++;
         // check all lines are same length
-        int len = strlen(buffer);
-        if (buffer[len - 1] == '\n')
-        {
-            len--;
-        }
-        if (buffer[len - 1] == '\r')
-        {
-            len--;
-        }   
+        len = getStringLen(buffer);
 
-        // FIXME - could make a function called "invalid maze error" to avoid repeated code
         if (len != cols)
         {
-            printf("Error: Invalid maze\n");
-            fclose(mazeFile);
-            return 3;
+            invalidMaseError(mazeFile);
         }
     }
     // Check number of lines is within maze height bounds
     if (rows < MIN_HEIGHT || rows > MAX_HEIGHT)
     {
-        printf("Error: Invalid maze\n");
-        fclose(mazeFile);
-        return 3;
+        invalidMaseError(mazeFile);
     }
     // Fill height and width into maze struct
     mz->width = cols;
     mz->height = rows;
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int allocateMemory(maze *mz)
@@ -102,13 +95,7 @@ int allocateMemory(maze *mz)
         printf("Memory allocation failed\n");
         return 100;
     }
-    return 0;
-}
-
-void freeMazeMemory(maze *mz)
-{
-    // FIXME - not need this function anymore
-    free(mz->grid);
+    return EXIT_SUCCESS;
 }
 
 int secondPass(FILE *mazeFile, maze *mz)
@@ -129,9 +116,9 @@ int secondPass(FILE *mazeFile, maze *mz)
             char symbol = toupper(buffer[j]);
             // Check if char is valid and return error code if not
             if (symbol != 'S' && symbol != 'E' && symbol != '#' && symbol != ' ')
-            {   
+            {
                 printf("Error: Invalid maze\n");
-                return 3;
+                return EXIT_MAZE_ERROR;
             }
             // Set sFound and eFound to true if found
             else if (symbol == 'S' && sFound == 0)
@@ -141,24 +128,25 @@ int secondPass(FILE *mazeFile, maze *mz)
                 mz->playerPos[1] = i;
             }
             else if (symbol == 'E' && eFound == 0)
-            {  
+            {
                 eFound = 1;
             }
             // Check if S or E is already found
             else if ((symbol == 'S' && sFound == 1) || (symbol == 'E' && eFound == 1))
-            {   
+            {
                 printf("Error: Invalid maze\n");
-                return 3;
+                return EXIT_MAZE_ERROR;
             }
             mz->grid[(i * mz->width) + j] = symbol;
         }
     }
-    if (sFound == 0 || eFound == 0){
+    if (sFound == 0 || eFound == 0)
+    {
         printf("no S or E\n");
         printf("Error: Invalid maze\n");
         return EXIT_MAZE_ERROR;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int readFileIntoStruct(const char *fileName, maze *mz)
@@ -169,10 +157,10 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     if (!mazeFile)
     {
         printf("Error: Could not open file\n");
-        return 2;
+        return EXIT_FILE_ERROR;
     }
 
-    // First Pass - will find height and width and check format of file
+    // First Pass - will find height and width and check they are winith bounds
     int returnCode = firstPass(mazeFile, mz);
     if (returnCode != 0)
     {
@@ -190,8 +178,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
     returnCode = secondPass(mazeFile, mz);
     if (returnCode != 0)
     {
-        printf("return code %d\n",returnCode);
-        freeMazeMemory(mz);
+        free(mz->grid);
         return returnCode;
     }
 
@@ -200,7 +187,7 @@ int readFileIntoStruct(const char *fileName, maze *mz)
 
     // Tell user file successfully loaded
     printf("Maze %s loaded successfully\n", fileName);
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void displayMaze(maze *mz)
@@ -253,7 +240,7 @@ int movePlayer(int xMove, int yMove, maze *mz)
     if (mz->grid[(yPos * mz->width) + xPos] == 'E')
     {
         printf("Congratulations! You finished the maze.\n");
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     // Move the player
@@ -294,7 +281,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         printf("Usage: ./maze <filename>\n");
-        return 1;
+        return EXIT_ARG_ERROR;
     }
 
     // Create maze instance
@@ -332,8 +319,8 @@ int main(int argc, char *argv[])
             // End game with win
             if (returnCode == 0)
             {
-                freeMazeMemory(&maze);
-                return 0;
+                free(maze.grid);
+                return EXIT_SUCCESS;
             }
             // Return return code if error has occered
             else if (returnCode != -1)
