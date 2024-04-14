@@ -19,8 +19,6 @@
 #define EXIT_MAZE_ERROR 3
 #define FUNCTION_SUCCESS -1
 
-// FIXME - add descritions at head of all functions
-
 typedef struct __MazeInfo
 {
     int width, height, playerPos[2];
