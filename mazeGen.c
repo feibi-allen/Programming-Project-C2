@@ -12,10 +12,38 @@
 
 typedef struct __Maze
 {
-    char *grid;
+    char *completeMaze;
 } maze;
+
+typedef struct __itemOnStack
+{   
+    int cell;
+    stackItem *previousItem;
+} stackItem;
+
+int pop(stackItem *head){
+    int cell = head->cell;
+    stackItem *tmp = head;
+    head = head->previousItem;
+    free(tmp);
+    return cell;
+}
+
+void push(stackItem *head, int *cell){
+    stackItem *tmp = head;
+    head->previousItem=tmp;
+    head->cell = cell;
+}
 
 int main(int argc, char *argv[]) {
     // error check args
-    // asign maze struct memory
+    // asign maze struct grid memory
+    // fill grid with walls
+    // using working maze:
+        // pick random start
+        // repeat:  
+            // random branch
+            // check if already visited
+            // if not move to that cell, connect the two cells
+            // if is go back along the stack
 }
