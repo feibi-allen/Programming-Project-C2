@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <time.h>
 
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
@@ -18,6 +18,7 @@
 
 typedef struct __Maze
 {
+    int width, height, currentCell;
     char *grid;
 } maze;
 
@@ -47,7 +48,22 @@ int pop(item **head){
     return cell;
 }
 
+void mazeStructSetup(maze *maze, int height, int width){
+    maze->grid = (char *)malloc(height*width*sizeof(char));
+    maze->height = height;
+    maze->width = width;
+}
+
+int pickStartCell(maze *maze){
+    srand(time(NULL));
+    int row = rand()%((maze->width+1)/2)*2;
+    int col = rand()%((maze->height+1)/2)*2;
+    printf("row:%d, col:%d\n", row, col);
+    maze->currentCell = row*maze->width+col;
+}
+
 int main(int argc, char *argv[]) {
+
     // error check args
     if (argc !=4){
         printf("Usage: ./maze <filename>\n");
@@ -63,15 +79,24 @@ int main(int argc, char *argv[]) {
     }
 
     // asign maze struct grid memory
-    maze mz;
-    mz.grid = (char *)malloc(atoi(argv[2])*atoi(argv[3])*sizeof(char));
+    maze maze;
+    mazeStructSetup(&maze,height,width);
 
     //initialize stack
     item *head = NULL;
-    for (int i=0;i<10;i++){
-        push(&head,i);
-        printf("%d",pop(&head));
-    }
+
+    pickStartCell(&maze);
+    push(&head,maze.currentCell);
+
+    //while (1){
+        // pick direction
+        // check if visited or out of rance (pick other direction)
+        // check if all directions are checked (pop)
+        // move to new cell and create path
+        // repeat until stack is empty
+
+
+    //}
 
     // asign maze struct grid memory
     // fill grid with walls
