@@ -4,6 +4,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
@@ -15,27 +17,38 @@ typedef struct __Maze
     char *completeMaze;
 } maze;
 
-typedef struct __itemOnStack
-{   
+typedef struct __item
+{
     int cell;
-    stackItem *previousItem;
-} stackItem;
+    struct __item *previous;
+} item;
 
-int pop(stackItem *head){
-    int cell = head->cell;
-    stackItem *tmp = head;
-    head = head->previousItem;
+// modify pointer to head 
+void push(item **head, int cell)
+{
+    item *tmp = (item*)malloc(sizeof(item));
+    tmp->previous= *head;
+    (*head) = tmp;
+    tmp->cell=cell;
+}
+
+int pop(item **head){
+    if (*head == NULL){
+        return -1;
+    }
+    printf("%d\n",(*head)->cell);
+    item *tmp = *head;
+    *head = (*head)->previous;
     free(tmp);
-    return cell;
 }
 
-void push(stackItem *head, int *cell){
-    stackItem *tmp = head;
-    head->previousItem=tmp;
-    head->cell = cell;
-}
+int main() {
+    item *head = (item*)malloc(sizeof(item));
+    head->cell=0;
+    head->previous=NULL;
+    push(&head,1);
+    printf("%d",head->cell);
 
-int main(int argc, char *argv[]) {
     // error check args
     // asign maze struct grid memory
     // fill grid with walls
