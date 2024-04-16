@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 
 #define MIN_WIDTH 5
 #define MAX_WIDTH 100
@@ -33,20 +34,27 @@ typedef struct __item
 void push(item **head, int cell)
 {
     item *tmp = (item*)malloc(sizeof(item));
+    printf("Creating item %d\n", cell);
     tmp->cell=cell;
     tmp->previous= *head;
+    if(*head != NULL) {
+       printf("Previous cell item %d\n", tmp->previous->cell); 
+    }
+    
     (*head) = tmp;
 }
 
 int pop(item **head){
-    if (*head == NULL){
-        return -1;
+    if ((*head)->previous == NULL){
+        printf("last cell reached\n");
+        return FALSE;
     }
-    int cell = (*head)->cell;
+    printf("Free item %d\n", (*head)->cell);
     item *tmp = *head;
     *head = (*head)->previous;
     free(tmp);
-    return cell;
+    printf("Head item %d\n", (*head)->cell);
+    return TRUE;
 }
 
 void mazeStructSetup(maze *maze, int height, int width){
@@ -59,7 +67,9 @@ int pickStartCell(maze *maze){
     srand(time(NULL));
     int row = rand()%((maze->width+1)/2)*2;
     int col = rand()%((maze->height+1)/2)*2;
+    printf("row:%d, col:%d\n", row, col);
     maze->currentCell = (row*maze->width)+col;
+    maze->grid[maze->currentCell] = ' ';
 }
 
 int validDirection(maze *maze, int row, int col){
@@ -95,6 +105,7 @@ int pickDirection(maze *maze){
         {
         case 0:
             //north
+            printf("north\n");
             if (validDirection(maze,row-2,col) == TRUE){
                 moveToNextCell(maze,maze->currentCell-(2*maze->width),maze->currentCell-maze->width);
                 return TRUE;
@@ -102,6 +113,7 @@ int pickDirection(maze *maze){
             break;
         case 1:
             //east
+            printf("east\n");
             if (validDirection(maze,row,col+2)== TRUE){
                 moveToNextCell(maze,maze->currentCell+2,maze->currentCell+1);
                 return TRUE;
@@ -109,6 +121,7 @@ int pickDirection(maze *maze){
             break;
         case 2:
             //south
+            printf("south\n");
             if (validDirection(maze,row+2,col)== TRUE){
                 moveToNextCell(maze,maze->currentCell+(2*maze->width),maze->currentCell+maze->width);
                 return TRUE;
@@ -116,22 +129,50 @@ int pickDirection(maze *maze){
             break;
         case 3:
             //west
+            printf("west\n");
             if (validDirection(maze,row,col-2)== TRUE){
                 moveToNextCell(maze,maze->currentCell-2,maze->currentCell-1);
                 return TRUE;
             }
             break;
         }
+        int allDirectionsChecked = TRUE;
         for (int i = 0; i < 4; i++) {
+            printf("direction[%d]",i);
             if (directions[i] !=1){
-                continue;
+                allDirectionsChecked = FALSE;
             }
         }
-        return FALSE;   
+        printf("{%d,%d,%d,%d}\n", directions[0], directions[1], directions[2], directions[3]);
+        if (allDirectionsChecked == TRUE) {
+           return FALSE;  
+        }
+          
     }
-    
+}
 
+void displayMaze(maze *mz)
+{
+    printf("\n");
+    for (int i = 0; i < mz->height; i++)
+    {
+        for (int j = 0; j < mz->width; j++)
+        {
+            printf("%c", mz->grid[(i * mz->width) + j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
 
+void fillWalls(maze *mz) {
+    for (int i = 0; i < mz->height; i++)
+    {
+        for (int j = 0; j < mz->width; j++)
+        {
+            mz->grid[(i*mz->width)+j] = '#';
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -153,13 +194,42 @@ int main(int argc, char *argv[]) {
     // asign maze struct grid memory
     maze maze;
     mazeStructSetup(&maze,height,width);
+    fillWalls(&maze);
 
     //initialize stack
     item *head = NULL;
 
     //pick start cell
     pickStartCell(&maze);
+    printf("start cell: %d\n",maze.currentCell);
     push(&head,maze.currentCell);
+
+    int stack_cntr = 1;
+    while (1) {
+        int input;
+        printf("1 for step:");
+        scanf("%d",&input);
+        if (input == 1) {
+            if (pickDirection(&maze)) {
+                printf("popping %d stack size %d\n",head->cell, stack_cntr);
+                stack_cntr--;
+                /*if ((head->previous)==NULL){
+                    printf("maze complete\n");
+                    return 0;
+                }*/
+                
+                if (pop(&head) == FALSE){
+                    return 0;
+                }
+                maze.currentCell = head->cell;
+            }else{
+                printf("pushing %d\n",maze.currentCell);
+                push(&head,maze.currentCell);
+                stack_cntr++;
+            }
+            displayMaze(&maze);
+        }
+    }
 
     //while (1){
         // pick direction
