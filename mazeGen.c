@@ -13,7 +13,8 @@
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
 
-#define EXIT_SUCCESS 0
+#define TRUE 0
+#define FALSE 1
 #define EXIT_ARG_ERROR 1
 
 typedef struct __Maze
@@ -58,8 +59,79 @@ int pickStartCell(maze *maze){
     srand(time(NULL));
     int row = rand()%((maze->width+1)/2)*2;
     int col = rand()%((maze->height+1)/2)*2;
-    printf("row:%d, col:%d\n", row, col);
-    maze->currentCell = row*maze->width+col;
+    maze->currentCell = (row*maze->width)+col;
+}
+
+int validDirection(maze *maze, int row, int col){
+    if (row<0||row>=maze->width||col<0||col>=maze->height){
+        return FALSE;
+    }
+    int cell = (row*maze->width)+col;
+    if (maze->grid[cell]==' '){
+        return FALSE;
+    }
+    return TRUE;
+}
+
+void moveToNextCell(maze *maze,int nextCell, int bridge){
+    printf("moving to %d:\n", nextCell);
+    maze->grid[bridge] = ' ';
+    maze->grid[nextCell] = ' ';
+    maze->currentCell = nextCell;
+}
+
+int pickDirection(maze *maze){
+    int directions[] = {0,0,0,0};
+    int row = maze->currentCell/maze->width;
+    int col = maze->currentCell%maze->width;
+    int nextCell;
+    while(1){
+        int direction = rand()%4;
+        if (directions[direction] == 1) {
+            continue;
+        }
+        directions[direction] = 1;
+        switch (direction)
+        {
+        case 0:
+            //north
+            if (validDirection(maze,row-2,col) == TRUE){
+                moveToNextCell(maze,maze->currentCell-(2*maze->width),maze->currentCell-maze->width);
+                return TRUE;
+            }
+            break;
+        case 1:
+            //east
+            if (validDirection(maze,row,col+2)== TRUE){
+                moveToNextCell(maze,maze->currentCell+2,maze->currentCell+1);
+                return TRUE;
+            }
+            break;
+        case 2:
+            //south
+            if (validDirection(maze,row+2,col)== TRUE){
+                moveToNextCell(maze,maze->currentCell+(2*maze->width),maze->currentCell+maze->width);
+                return TRUE;
+            }
+            break;
+        case 3:
+            //west
+            if (validDirection(maze,row,col-2)== TRUE){
+                moveToNextCell(maze,maze->currentCell-2,maze->currentCell-1);
+                return TRUE;
+            }
+            break;
+        }
+        for (int i = 0; i < 4; i++) {
+            if (directions[i] !=1){
+                continue;
+            }
+        }
+        return FALSE;   
+    }
+    
+
+
 }
 
 int main(int argc, char *argv[]) {
@@ -85,6 +157,7 @@ int main(int argc, char *argv[]) {
     //initialize stack
     item *head = NULL;
 
+    //pick start cell
     pickStartCell(&maze);
     push(&head,maze.currentCell);
 
