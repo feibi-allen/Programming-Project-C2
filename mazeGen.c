@@ -42,7 +42,7 @@ typedef struct __item
 void push(item **head, maze *maze)
 {
     item *tmp = (item*)malloc(sizeof(item));
-    //printf("Creating item %d\n", node);
+    //printf("Current Pos: %d\nCreating item %d\n",maze->currentPos, maze->grid[maze->currentPos].position);
     tmp->nodeItem=maze->grid[maze->currentPos];
     tmp->previous= *head;
     if(*head != NULL) {
@@ -67,6 +67,13 @@ int pop(item **head){
 
 void mazeStructSetup(maze *maze, int height, int width){
     maze->grid = (node *)malloc(height*width*sizeof(node));
+    for (int i = 0; i<height*width; i++){
+        node cell;
+        cell.exploredEdges=0;
+        cell.pathEdges=0;
+        cell.position = i;
+        maze->grid[i] = cell;
+    }
     maze->height = height;
     maze->width = width;
 }
@@ -100,8 +107,8 @@ int validDirection(maze *maze, int row, int col){
 
 void moveToNextnode(maze *maze,int nextPos, int bridge){
     //printf("moving to %d:\n", nextnode);
-    maze->grid[bridge].symbol = '-';
     maze->grid[nextPos].symbol = '-';
+    maze->grid[bridge].symbol = '-';
     maze->currentPos = nextPos;
 }
 
@@ -192,7 +199,7 @@ void fillWalls(maze *mz) {
     {
         for (int j = 0; j < mz->width; j++)
         {
-            if (mz->grid[(i*mz->width)+j].symbol != '-'){
+            if (mz->grid[(i*mz->width)+j].symbol != '-'||mz->grid[(i*mz->width)+j].symbol != 'S'){
                 mz->grid[(i*mz->width)+j].symbol = '#';
             }
             
@@ -205,22 +212,23 @@ void fillLastRow(maze *maze){
     while (count<maze->width){
         //printf("count:%d\n",count);
         int col = rand() % maze->width;
-        int node = ((maze->height - 1)*maze->width)+col;
+        int pos = ((maze->height - 1)*maze->width)+col;
         //printf("maze->grid[%d] = %c\n",node, maze->grid[node]);
-        if (maze->grid[node].symbol != '-' && maze->grid[node].symbol != '#'){
+        if (maze->grid[pos].symbol != '-' && maze->grid[pos].symbol != '#'){
             // decide if wall or path
             char options[2] = {'#','-'};
             char symbol = options[rand()%2];
             //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (maze->grid[node-maze->width].symbol == '-'){
-                maze->grid[node].symbol = symbol;
-            }else if (col>0 && maze->grid[node-1].symbol == '-'){
-                maze->grid[node].symbol = symbol;
-            }else if (col<maze->width-1 && maze->grid[node-1].symbol == '-'){
-                maze->grid[node].symbol = symbol;
+            if (maze->grid[pos-maze->width].symbol == '-'){
+                maze->grid[pos].symbol = symbol;
+                maze->grid[pos].pathEdges++;
+            }else if (col>0 && maze->grid[pos-1].symbol == '-'){
+                maze->grid[pos].symbol = symbol;
+            }else if (col<maze->width-1 && maze->grid[pos-1].symbol == '-'){
+                maze->grid[pos].symbol = symbol;
             }else{
-                maze->grid[node].symbol = '#';
+                maze->grid[pos].symbol = '#';
             }
             count++;
         }
@@ -255,8 +263,15 @@ void fillLastCol(maze *maze){
     }
 }
 
-void addStart(maze maze){
-    
+void addStart(maze *maze){
+    for (int i = 0;i<maze->height*maze->width;i++){
+        printf("path edges:%d\n",maze->grid[i].pathEdges);
+        if (maze->grid[i].pathEdges == 1){
+            printf("adding start to %d\n",i);
+            maze->grid[i].symbol == 'S';
+            printf("maze->grid[i].symbol = %c\n",maze->grid[i].symbol);
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -298,6 +313,7 @@ int main(int argc, char *argv[]) {
             //stack_cntr--;
             
             if (pop(&head) == FALSE){
+                printf("end of stacl\n");
                 if (maze.height%2 == 0){
                     fillLastRow(&maze);
                 }
@@ -308,7 +324,9 @@ int main(int argc, char *argv[]) {
                 displayMaze(&maze);
                 return 0;
             }
+            //printf("current position before pop: %d\n", maze.currentPos);
             maze.currentPos = head->nodeItem.position;
+            //printf("current position after pop: %d\n", maze.currentPos);
         }else{
             //printf("pushing %d stack size %d\n",maze.currentPos, stack_cntr);
             push(&head,&maze);
