@@ -1,5 +1,5 @@
 /**
- * @file maze.c
+ * @file mazeGen.c
  * @author Fei-bi Allen
  */
 
@@ -171,7 +171,65 @@ void fillWalls(maze *mz) {
     {
         for (int j = 0; j < mz->width; j++)
         {
-            mz->grid[(i*mz->width)+j] = '#';
+            if (mz->grid[(i*mz->width)+j] != '-'){
+                mz->grid[(i*mz->width)+j] = '#';
+            }
+            
+        }
+    }
+}
+
+void fillLastRow(maze *maze){
+    int count = 0;
+    while (count<maze->width){
+        //printf("count:%d\n",count);
+        int col = rand() % maze->width;
+        int cell = ((maze->height - 1)*maze->width)+col;
+        //printf("maze->grid[%d] = %c\n",cell, maze->grid[cell]);
+        if (maze->grid[cell] != '-' && maze->grid[cell] != '#'){
+            // decide if wall or path
+            char options[2] = {'#','-'};
+            char symbol = options[rand()%2];
+            //printf("mazegrid[%d] != '-''#'\n",cell);
+            // check if it can connect to a path
+            if (maze->grid[cell-maze->width] == '-'){
+                maze->grid[cell] = symbol;
+            }else if (col>0 && maze->grid[cell-1] == '-'){
+                maze->grid[cell] = symbol;
+            }else if (col<maze->width-1 && maze->grid[cell-1] == '-'){
+                maze->grid[cell] = symbol;
+            }else{
+                maze->grid[cell] = '#';
+            }
+            count++;
+        }
+    }
+}
+
+void fillLastCol(maze *maze){
+    int count = 0, height = maze->height;
+    if (maze->height%2 ==0){
+        height--;
+    }
+    while (count < height){
+        int row = rand() % maze->height;
+        int cell = (row*maze->width)+maze->width-1;
+        if (maze->grid[cell] != '-' && maze->grid[cell] != '#'){
+            // decide if wall or path
+            char options[2] = {'#','-'};
+            char symbol = options[rand()%2];
+            //printf("mazegrid[%d] != '-''#'\n",cell);
+            // check if it can connect to a path
+            if (maze->grid[cell-1] == '-'){
+                maze->grid[cell] = symbol;
+            }else if (row>0 && maze->grid[cell-(maze->width)] == '-'){
+                maze->grid[cell] = symbol;
+            }else if (row<height-1 && maze->grid[cell+(maze->width)] == '-'){
+                maze->grid[cell] = symbol;
+            }else{
+                maze->grid[cell] = '#';
+            }
+            count++;
         }
     }
 }
@@ -180,7 +238,7 @@ int main(int argc, char *argv[]) {
 
     // error check args
     if (argc !=4){
-        //printf("Usage: ./maze <filename>\n");
+        printf("Usage: ./maze <filename>\n");
         return 1;
     }
 
@@ -195,7 +253,6 @@ int main(int argc, char *argv[]) {
     // asign maze struct grid memory
     maze maze;
     mazeStructSetup(&maze,height,width);
-    fillWalls(&maze);
 
     //initialize stack
     item *head = NULL;
@@ -216,6 +273,13 @@ int main(int argc, char *argv[]) {
             //stack_cntr--;
             
             if (pop(&head) == FALSE){
+                if (maze.height%2 == 0){
+                    fillLastRow(&maze);
+                }
+                if (maze.width%2 == 0){
+                    fillLastCol(&maze);
+                }
+                fillWalls(&maze);
                 displayMaze(&maze);
                 return 0;
             }
@@ -225,6 +289,5 @@ int main(int argc, char *argv[]) {
             push(&head,maze.currentCell);
             //stack_cntr++;
         }
-        //displayMaze(&maze);
     }
 }
