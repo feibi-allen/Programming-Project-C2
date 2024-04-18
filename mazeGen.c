@@ -16,7 +16,9 @@
 
 #define TRUE 0
 #define FALSE 1
+#define EXIT_SUCCESS 0
 #define EXIT_ARG_ERROR 1
+#define EXIT_FILE_ERROR 2
 
 typedef struct __Node
 {
@@ -180,39 +182,51 @@ int pickDirection(maze *maze){
     }
 }
 
-void displayMaze(maze *mz)
-{
-    printf("\n");
-    for (int i = 0; i < mz->height; i++)
-    {
-        for (int j = 0; j < mz->width; j++)
-        {
-            printf("%c", mz->grid[(i * mz->width) + j].symbol);
-        }
-        printf("\n");
+int edgeAbove(maze *maze, int pos){
+    if (pos<maze->width){
+        return 0;
     }
-    printf("\n");
+    if (maze->grid[pos-maze->width].symbol == '-'){
+        return 1;
+    }
+    return 0;
 }
 
-void fillWalls(maze *mz) {
-    for (int i = 0; i < mz->height; i++)
-    {
-        for (int j = 0; j < mz->width; j++)
-        {
-            if (mz->grid[(i*mz->width)+j].symbol != '-'||mz->grid[(i*mz->width)+j].symbol != 'S'){
-                mz->grid[(i*mz->width)+j].symbol = '#';
-            }
-            
-        }
+int edgeLeft(maze *maze, int pos){
+    if (pos%maze->width==0){
+        return 0;
     }
+    if (maze->grid[pos-1].symbol == '-'){
+        return 1;
+    }
+    return 0;
+}
+
+int edgeRight(maze *maze, int pos){
+    if (pos%maze->width==maze->width-1){
+        return 0;
+    }
+    if (maze->grid[pos+1].symbol == '-'){
+        return 1;
+    }
+    return 0;
+}
+
+int edgeDown(maze *maze, int pos){
+    if (pos != 0 && pos/maze->width==maze->height-1){
+        return 0;
+    }
+    if (maze->grid[pos+maze->width].symbol == '-'){
+        return 1;
+    }
+    return 0;
 }
 
 void fillLastRow(maze *maze){
     int count = 0;
     while (count<maze->width){
         //printf("count:%d\n",count);
-        int col = rand() % maze->width;
-        int pos = ((maze->height - 1)*maze->width)+col;
+        int pos = ((maze->height - 1)*maze->width)+rand() % maze->width;
         //printf("maze->grid[%d] = %c\n",node, maze->grid[node]);
         if (maze->grid[pos].symbol != '-' && maze->grid[pos].symbol != '#'){
             // decide if wall or path
@@ -220,12 +234,12 @@ void fillLastRow(maze *maze){
             char symbol = options[rand()%2];
             //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (maze->grid[pos-maze->width].symbol == '-'){
+            if (edgeAbove(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].pathEdges++;
-            }else if (col>0 && maze->grid[pos-1].symbol == '-'){
+            }else if (edgeLeft(maze,pos)){
                 maze->grid[pos].symbol = symbol;
-            }else if (col<maze->width-1 && maze->grid[pos-1].symbol == '-'){
+            }else if (edgeRight(maze,pos)){
                 maze->grid[pos].symbol = symbol;
             }else{
                 maze->grid[pos].symbol = '#';
@@ -263,16 +277,108 @@ void fillLastCol(maze *maze){
     }
 }
 
-void addStart(maze *maze){
-    for (int i = 0;i<maze->height*maze->width;i++){
-        printf("path edges:%d\n",maze->grid[i].pathEdges);
-        if (maze->grid[i].pathEdges == 1){
-            printf("adding start to %d\n",i);
-            maze->grid[i].symbol == 'S';
-            printf("maze->grid[i].symbol = %c\n",maze->grid[i].symbol);
+void countEdges(maze *maze){
+    for (int i = 0 ; i<maze->height*maze->width; i++){
+        maze->grid[i].pathEdges = 0;
+        if (maze->grid[i].symbol != '-'){
+            continue;
+        }
+        if (edgeAbove(maze,i)){
+            maze->grid[i].pathEdges++;
+        }
+        if (edgeDown(maze,i)){
+            maze->grid[i].pathEdges++;
+        }
+        if (edgeLeft(maze,i)){
+            maze->grid[i].pathEdges++;
+        }
+        if (edgeRight(maze,i)){
+            maze->grid[i].pathEdges++;
         }
     }
 }
+
+void addStart(maze *maze){
+    for (int i = 0;i<maze->height*maze->width;i++){
+        //printf("position %d has path edges:%d\n",i,maze->grid[i].pathEdges);
+        if (maze->grid[i].pathEdges == 1){
+            //printf("adding start to %d\n",i);
+            maze->grid[i].symbol = 'S';
+            return;
+        }
+    }
+    for (int i = 0;i<maze->height*maze->width;i++){
+        if (maze->grid[i].pathEdges == 2){
+            maze->grid[i].symbol = 'S';
+            return;
+        }
+    }
+    for (int i = 0;i<maze->height*maze->width;i++){
+        if (maze->grid[i].pathEdges == 3){
+            maze->grid[i].symbol = 'S';
+            return;
+        }
+    }
+}
+
+void addEnd(maze *maze){
+    for (int i = maze->height*maze->width;i>0;i--){
+        if (maze->grid[i].symbol == 'S'){
+            continue;
+        }
+        if (maze->grid[i].pathEdges == 1){
+            maze->grid[i].symbol = 'E';
+            return;
+        }
+    }
+    for (int i = 0;i<maze->height*maze->width;i++){
+        if (maze->grid[i].symbol == 'S'){
+            continue;
+        }
+        if (maze->grid[i].pathEdges == 2){
+            maze->grid[i].symbol = 'E';
+            return;
+        }
+    }
+    for (int i = 0;i<maze->height*maze->width;i++){
+        if (maze->grid[i].symbol == 'S'){
+            continue;
+        }
+        if (maze->grid[i].pathEdges == 3){
+            maze->grid[i].symbol = 'E';
+            return;
+        }
+    }
+}
+
+void fillWalls(maze *mz) {
+    for (int i = 0; i < mz->height; i++)
+    {
+        for (int j = 0; j < mz->width; j++)
+        {
+            if (mz->grid[(i*mz->width)+j].symbol != '-' && mz->grid[(i*mz->width)+j].symbol != 'S' && mz->grid[(i*mz->width)+j].symbol != 'E'){
+                mz->grid[(i*mz->width)+j].symbol = '#';
+            }
+            
+        }
+    }
+}
+
+void displayMaze(maze *mz)
+{
+    printf("\n");
+    for (int i = 0; i < mz->height; i++)
+    {
+        for (int j = 0; j < mz->width; j++)
+        {
+            printf("%c", mz->grid[(i * mz->width) + j].symbol);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void
 
 int main(int argc, char *argv[]) {
 
@@ -313,13 +419,15 @@ int main(int argc, char *argv[]) {
             //stack_cntr--;
             
             if (pop(&head) == FALSE){
-                printf("end of stacl\n");
                 if (maze.height%2 == 0){
                     fillLastRow(&maze);
                 }
                 if (maze.width%2 == 0){
                     fillLastCol(&maze);
                 }
+                countEdges(&maze);
+                addStart(&maze);
+                addEnd(&maze);
                 fillWalls(&maze);
                 displayMaze(&maze);
                 return 0;
