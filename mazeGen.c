@@ -18,27 +18,35 @@
 #define FALSE 1
 #define EXIT_ARG_ERROR 1
 
+typedef struct __Node
+{
+    char symbol;
+    int position;
+    int exploredEdges;
+    int pathEdges;
+} node;
+
 typedef struct __Maze
 {
-    int width, height, currentCell;
-    char *grid;
+    int width, height, currentPos;
+    node *grid;
 } maze;
 
 typedef struct __item
 {
-    int cell;
+    node nodeItem;
     struct __item *previous;
 } item;
 
 // modify pointer to head 
-void push(item **head, int cell)
+void push(item **head, maze *maze)
 {
     item *tmp = (item*)malloc(sizeof(item));
-    //printf("Creating item %d\n", cell);
-    tmp->cell=cell;
+    //printf("Creating item %d\n", node);
+    tmp->nodeItem=maze->grid[maze->currentPos];
     tmp->previous= *head;
     if(*head != NULL) {
-       //printf("Previous cell item %d\n", tmp->previous->cell); 
+       //printf("Previous node item %d\n", tmp->previous->node); 
     }
     
     (*head) = tmp;
@@ -46,30 +54,35 @@ void push(item **head, int cell)
 
 int pop(item **head){
     if ((*head)->previous == NULL){
-        //printf("last cell reached\n");
+        //printf("last node reached\n");
         return FALSE;
     }
-    //printf("Free item %d\n", (*head)->cell);
+    //printf("Free item %d\n", (*head)->node);
     item *tmp = *head;
     *head = (*head)->previous;
     free(tmp);
-    //printf("Head item %d\n", (*head)->cell);
+    //printf("Head item %d\n", (*head)->node);
     return TRUE;
 }
 
 void mazeStructSetup(maze *maze, int height, int width){
-    maze->grid = (char *)malloc(height*width*sizeof(char));
+    maze->grid = (node *)malloc(height*width*sizeof(node));
     maze->height = height;
     maze->width = width;
 }
 
-int pickStartCell(maze *maze){
+int pickStartnode(maze *maze){
     srand(time(NULL));
     int col = rand()%((maze->width+1)/2)*2;
     int row = rand()%((maze->height+1)/2)*2;
     //printf("row:%d, col:%d\n", row, col);
-    maze->currentCell = (row*maze->width)+col;
-    maze->grid[maze->currentCell] = '-';
+    maze->currentPos = (row*maze->width)+col;
+    node startNode;
+    startNode.exploredEdges = 0;
+    startNode.pathEdges = 0;
+    startNode.symbol = '-';
+    startNode.position = maze->currentPos;
+    maze->grid[maze->currentPos] = startNode;
 }
 
 int validDirection(maze *maze, int row, int col){
@@ -77,25 +90,28 @@ int validDirection(maze *maze, int row, int col){
     if (row<0||row>=maze->height||col<0||col>=maze->width){
         return FALSE;
     }
-    int cell = (row*maze->width)+col;
-    if (maze->grid[cell]=='-'){
+    int position = (row*maze->width)+col;
+    // check if already visited
+    if (maze->grid[position].symbol =='-'){
         return FALSE;
     }
     return TRUE;
 }
 
-void moveToNextCell(maze *maze,int nextCell, int bridge){
-    //printf("moving to %d:\n", nextCell);
-    maze->grid[bridge] = '-';
-    maze->grid[nextCell] = '-';
-    maze->currentCell = nextCell;
+void moveToNextnode(maze *maze,int nextPos, int bridge){
+    //printf("moving to %d:\n", nextnode);
+    maze->grid[bridge].symbol = '-';
+    maze->grid[nextPos].symbol = '-';
+    maze->currentPos = nextPos;
 }
 
 int pickDirection(maze *maze){
+    if (maze->grid[maze->currentPos].exploredEdges == 4){
+        return FALSE;
+    }
     int directions[] = {0,0,0,0};
-    int row = maze->currentCell/maze->width;
-    int col = maze->currentCell%maze->width;
-    int nextCell;
+    int row = maze->currentPos/maze->width;
+    int col = maze->currentPos%maze->width;
     while(1){
         int direction = rand()%4;
         if (directions[direction] == 1) {
@@ -108,7 +124,8 @@ int pickDirection(maze *maze){
             //north
             //printf("north\n");
             if (validDirection(maze,row-2,col) == TRUE){
-                moveToNextCell(maze,maze->currentCell-(2*maze->width),maze->currentCell-maze->width);
+                maze->grid[maze->currentPos].pathEdges++;
+                moveToNextnode(maze,maze->currentPos-(2*maze->width),maze->currentPos-maze->width);
                 return TRUE;
             }
             break;
@@ -116,7 +133,8 @@ int pickDirection(maze *maze){
             //east
             //printf("east\n");
             if (validDirection(maze,row,col+2)== TRUE){
-                moveToNextCell(maze,maze->currentCell+2,maze->currentCell+1);
+                maze->grid[maze->currentPos].pathEdges++;
+                moveToNextnode(maze,maze->currentPos+2,maze->currentPos+1);
                 return TRUE;
             }
             break;
@@ -124,7 +142,8 @@ int pickDirection(maze *maze){
             //south
             //printf("south\n");
             if (validDirection(maze,row+2,col)== TRUE){
-                moveToNextCell(maze,maze->currentCell+(2*maze->width),maze->currentCell+maze->width);
+                maze->grid[maze->currentPos].pathEdges++;
+                moveToNextnode(maze,maze->currentPos+(2*maze->width),maze->currentPos+maze->width);
                 return TRUE;
             }
             break;
@@ -132,7 +151,8 @@ int pickDirection(maze *maze){
             //west
             //printf("west\n");
             if (validDirection(maze,row,col-2)== TRUE){
-                moveToNextCell(maze,maze->currentCell-2,maze->currentCell-1);
+                maze->grid[maze->currentPos].pathEdges++;
+                moveToNextnode(maze,maze->currentPos-2,maze->currentPos-1);
                 return TRUE;
             }
             break;
@@ -146,6 +166,7 @@ int pickDirection(maze *maze){
         }
         //printf("{%d,%d,%d,%d}\n", directions[0], directions[1], directions[2], directions[3]);
         if (allDirectionsChecked == TRUE) {
+            maze->grid[maze->currentPos].exploredEdges = 4;
            return FALSE;  
         }
           
@@ -159,7 +180,7 @@ void displayMaze(maze *mz)
     {
         for (int j = 0; j < mz->width; j++)
         {
-            printf("%c", mz->grid[(i * mz->width) + j]);
+            printf("%c", mz->grid[(i * mz->width) + j].symbol);
         }
         printf("\n");
     }
@@ -171,8 +192,8 @@ void fillWalls(maze *mz) {
     {
         for (int j = 0; j < mz->width; j++)
         {
-            if (mz->grid[(i*mz->width)+j] != '-'){
-                mz->grid[(i*mz->width)+j] = '#';
+            if (mz->grid[(i*mz->width)+j].symbol != '-'){
+                mz->grid[(i*mz->width)+j].symbol = '#';
             }
             
         }
@@ -184,22 +205,22 @@ void fillLastRow(maze *maze){
     while (count<maze->width){
         //printf("count:%d\n",count);
         int col = rand() % maze->width;
-        int cell = ((maze->height - 1)*maze->width)+col;
-        //printf("maze->grid[%d] = %c\n",cell, maze->grid[cell]);
-        if (maze->grid[cell] != '-' && maze->grid[cell] != '#'){
+        int node = ((maze->height - 1)*maze->width)+col;
+        //printf("maze->grid[%d] = %c\n",node, maze->grid[node]);
+        if (maze->grid[node].symbol != '-' && maze->grid[node].symbol != '#'){
             // decide if wall or path
             char options[2] = {'#','-'};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != '-''#'\n",cell);
+            //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (maze->grid[cell-maze->width] == '-'){
-                maze->grid[cell] = symbol;
-            }else if (col>0 && maze->grid[cell-1] == '-'){
-                maze->grid[cell] = symbol;
-            }else if (col<maze->width-1 && maze->grid[cell-1] == '-'){
-                maze->grid[cell] = symbol;
+            if (maze->grid[node-maze->width].symbol == '-'){
+                maze->grid[node].symbol = symbol;
+            }else if (col>0 && maze->grid[node-1].symbol == '-'){
+                maze->grid[node].symbol = symbol;
+            }else if (col<maze->width-1 && maze->grid[node-1].symbol == '-'){
+                maze->grid[node].symbol = symbol;
             }else{
-                maze->grid[cell] = '#';
+                maze->grid[node].symbol = '#';
             }
             count++;
         }
@@ -213,25 +234,29 @@ void fillLastCol(maze *maze){
     }
     while (count < height){
         int row = rand() % maze->height;
-        int cell = (row*maze->width)+maze->width-1;
-        if (maze->grid[cell] != '-' && maze->grid[cell] != '#'){
+        int node = (row*maze->width)+maze->width-1;
+        if (maze->grid[node].symbol != '-' && maze->grid[node].symbol != '#'){
             // decide if wall or path
             char options[2] = {'#','-'};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != '-''#'\n",cell);
+            //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (maze->grid[cell-1] == '-'){
-                maze->grid[cell] = symbol;
-            }else if (row>0 && maze->grid[cell-(maze->width)] == '-'){
-                maze->grid[cell] = symbol;
-            }else if (row<height-1 && maze->grid[cell+(maze->width)] == '-'){
-                maze->grid[cell] = symbol;
+            if (maze->grid[node-1].symbol == '-'){
+                maze->grid[node].symbol = symbol;
+            }else if (row>0 && maze->grid[node-(maze->width)].symbol == '-'){
+                maze->grid[node].symbol = symbol;
+            }else if (row<height-1 && maze->grid[node+(maze->width)].symbol == '-'){
+                maze->grid[node].symbol = symbol;
             }else{
-                maze->grid[cell] = '#';
+                maze->grid[node].symbol = '#';
             }
             count++;
         }
     }
+}
+
+void addStart(maze maze){
+    
 }
 
 int main(int argc, char *argv[]) {
@@ -257,11 +282,11 @@ int main(int argc, char *argv[]) {
     //initialize stack
     item *head = NULL;
 
-    //pick start cell
-    pickStartCell(&maze);
+    //pick start node
+    pickStartnode(&maze);
     
-    push(&head,maze.currentCell);
-    //printf("start cell: %d\n",maze.currentCell);
+    push(&head,&maze);
+    //printf("start node: %d\n",maze.currentPos);
     //int stack_cntr = 1;
 
     while (1) {
@@ -269,7 +294,7 @@ int main(int argc, char *argv[]) {
         // printf("input 1 for step:");
         // scanf("%d", &input);
         if (pickDirection(&maze)) {
-            //printf("popping %d stack size %d\n",head->cell, stack_cntr);
+            //printf("popping %d stack size %d\n",head->node, stack_cntr);
             //stack_cntr--;
             
             if (pop(&head) == FALSE){
@@ -283,10 +308,10 @@ int main(int argc, char *argv[]) {
                 displayMaze(&maze);
                 return 0;
             }
-            maze.currentCell = head->cell;
+            maze.currentPos = head->nodeItem.position;
         }else{
-            //printf("pushing %d stack size %d\n",maze.currentCell, stack_cntr);
-            push(&head,maze.currentCell);
+            //printf("pushing %d stack size %d\n",maze.currentPos, stack_cntr);
+            push(&head,&maze);
             //stack_cntr++;
         }
     }
