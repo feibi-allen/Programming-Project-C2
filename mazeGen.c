@@ -23,6 +23,7 @@
 typedef struct __Node
 {
     char symbol;
+    int visited;
     int position;
     int exploredEdges;
     int pathEdges;
@@ -71,8 +72,9 @@ void mazeStructSetup(maze *maze, int height, int width){
     maze->grid = (node *)malloc(height*width*sizeof(node));
     for (int i = 0; i<height*width; i++){
         node cell;
+        cell.visited = 0;
         cell.exploredEdges=0;
-        cell.pathEdges=0;
+        cell.pathEdges= 0;
         cell.position = i;
         maze->grid[i] = cell;
     }
@@ -87,9 +89,8 @@ int pickStartnode(maze *maze){
     //printf("row:%d, col:%d\n", row, col);
     maze->currentPos = (row*maze->width)+col;
     node startNode;
-    startNode.exploredEdges = 0;
-    startNode.pathEdges = 0;
-    startNode.symbol = ' ';
+    startNode.visited = 1;
+    startNode.symbol = '-';
     startNode.position = maze->currentPos;
     maze->grid[maze->currentPos] = startNode;
 }
@@ -101,7 +102,7 @@ int validDirection(maze *maze, int row, int col){
     }
     int position = (row*maze->width)+col;
     // check if already visited
-    if (maze->grid[position].symbol ==' '){
+    if (maze->grid[position].visited){
         return FALSE;
     }
     return TRUE;
@@ -109,8 +110,10 @@ int validDirection(maze *maze, int row, int col){
 
 void moveToNextnode(maze *maze,int nextPos, int bridge){
     //printf("moving to %d:\n", nextnode);
-    maze->grid[nextPos].symbol = ' ';
-    maze->grid[bridge].symbol = ' ';
+    maze->grid[nextPos].symbol = '-';
+    maze->grid[nextPos].visited = 1;
+    maze->grid[bridge].symbol = '-';
+    maze->grid[bridge].visited = 1;
     maze->currentPos = nextPos;
 }
 
@@ -133,7 +136,6 @@ int pickDirection(maze *maze){
             //north
             //printf("north\n");
             if (validDirection(maze,row-2,col) == TRUE){
-                maze->grid[maze->currentPos].pathEdges++;
                 moveToNextnode(maze,maze->currentPos-(2*maze->width),maze->currentPos-maze->width);
                 return TRUE;
             }
@@ -142,7 +144,6 @@ int pickDirection(maze *maze){
             //east
             //printf("east\n");
             if (validDirection(maze,row,col+2)== TRUE){
-                maze->grid[maze->currentPos].pathEdges++;
                 moveToNextnode(maze,maze->currentPos+2,maze->currentPos+1);
                 return TRUE;
             }
@@ -151,7 +152,6 @@ int pickDirection(maze *maze){
             //south
             //printf("south\n");
             if (validDirection(maze,row+2,col)== TRUE){
-                maze->grid[maze->currentPos].pathEdges++;
                 moveToNextnode(maze,maze->currentPos+(2*maze->width),maze->currentPos+maze->width);
                 return TRUE;
             }
@@ -159,8 +159,7 @@ int pickDirection(maze *maze){
         case 3:
             //west
             //printf("west\n");
-            if (validDirection(maze,row,col-2)== TRUE){
-                maze->grid[maze->currentPos].pathEdges++;
+            if (validDirection(maze,row,col-2)== TRUE){;
                 moveToNextnode(maze,maze->currentPos-2,maze->currentPos-1);
                 return TRUE;
             }
@@ -186,7 +185,7 @@ int edgeAbove(maze *maze, int pos){
     if (pos<maze->width){
         return 0;
     }
-    if (maze->grid[pos-maze->width].symbol == ' '){
+    if (maze->grid[pos-maze->width].symbol == '-'){
         return 1;
     }
     return 0;
@@ -196,7 +195,7 @@ int edgeLeft(maze *maze, int pos){
     if (pos%maze->width==0){
         return 0;
     }
-    if (maze->grid[pos-1].symbol == ' '){
+    if (maze->grid[pos-1].symbol == '-'){
         return 1;
     }
     return 0;
@@ -206,7 +205,7 @@ int edgeRight(maze *maze, int pos){
     if (pos%maze->width==maze->width-1){
         return 0;
     }
-    if (maze->grid[pos+1].symbol == ' '){
+    if (maze->grid[pos+1].symbol == '-'){
         return 1;
     }
     return 0;
@@ -216,7 +215,7 @@ int edgeDown(maze *maze, int pos){
     if (pos != 0 && pos/maze->width==maze->height-1){
         return 0;
     }
-    if (maze->grid[pos+maze->width].symbol == ' '){
+    if (maze->grid[pos+maze->width].symbol == '-'){
         return 1;
     }
     return 0;
@@ -228,21 +227,21 @@ void fillLastRow(maze *maze){
         //printf("count:%d\n",count);
         int pos = ((maze->height - 1)*maze->width)+rand() % maze->width;
         //printf("maze->grid[%d] = %c\n",node, maze->grid[node]);
-        if (maze->grid[pos].symbol != ' ' && maze->grid[pos].symbol != '#'){
+        if (!maze->grid[pos].visited){
             // decide if wall or path
-            char options[2] = {'#',' '};
+            char options[2] = {'#','-'};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != ' ''#'\n",node);
+            //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
             if (edgeAbove(maze,pos)){
                 maze->grid[pos].symbol = symbol;
-                maze->grid[pos].pathEdges++;
+                maze->grid[pos].visited = 1;
             }else if (edgeLeft(maze,pos)){
                 maze->grid[pos].symbol = symbol;
+                maze->grid[pos].visited = 1;
             }else if (edgeRight(maze,pos)){
                 maze->grid[pos].symbol = symbol;
-            }else{
-                maze->grid[pos].symbol = '#';
+                maze->grid[pos].visited = 1;
             }
             count++;
         }
@@ -256,21 +255,22 @@ void fillLastCol(maze *maze){
     }
     while (count < height){
         int row = rand() % maze->height;
-        int node = (row*maze->width)+maze->width-1;
-        if (maze->grid[node].symbol != ' ' && maze->grid[node].symbol != '#'){
+        int pos = (row*maze->width)+maze->width-1;
+        if (!maze->grid[pos].visited){
             // decide if wall or path
-            char options[2] = {'#',' '};
+            char options[2] = {'#','-'};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != ' ''#'\n",node);
+            //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (maze->grid[node-1].symbol == ' '){
-                maze->grid[node].symbol = symbol;
-            }else if (row>0 && maze->grid[node-(maze->width)].symbol == ' '){
-                maze->grid[node].symbol = symbol;
-            }else if (row<height-1 && maze->grid[node+(maze->width)].symbol == ' '){
-                maze->grid[node].symbol = symbol;
-            }else{
-                maze->grid[node].symbol = '#';
+            if (edgeLeft(maze,pos)){
+                maze->grid[pos].symbol = symbol;
+                maze->grid[pos].visited = 1;
+            }else if (edgeAbove(maze,pos)){
+                maze->grid[pos].symbol = symbol;
+                maze->grid[pos].visited = 1;
+            }else if (edgeDown(maze,pos)){
+                maze->grid[pos].symbol = symbol;
+                maze->grid[pos].visited = 1;
             }
             count++;
         }
@@ -279,8 +279,8 @@ void fillLastCol(maze *maze){
 
 void countEdges(maze *maze){
     for (int i = 0 ; i<maze->height*maze->width; i++){
-        maze->grid[i].pathEdges = 0;
-        if (maze->grid[i].symbol != ' '){
+        //printf("position:%d visitied:%d\n",i,maze->grid[i].visited);
+        if (maze->grid[i].symbol != '-'){
             continue;
         }
         if (edgeAbove(maze,i)){
@@ -322,7 +322,8 @@ void addStart(maze *maze){
 }
 
 void addEnd(maze *maze){
-    for (int i = maze->height*maze->width;i>0;i--){
+    for (int i = maze->height*maze->width-1;i>=0;i--){
+        //printf("position %d has path edges:%d, visited:%d\n",i,maze->grid[i].pathEdges,maze->grid[i].visited);
         if (maze->grid[i].symbol == 'S'){
             continue;
         }
@@ -356,7 +357,8 @@ void fillWalls(maze *mz) {
     {
         for (int j = 0; j < mz->width; j++)
         {
-            if (mz->grid[(i*mz->width)+j].symbol != ' ' && mz->grid[(i*mz->width)+j].symbol != 'S' && mz->grid[(i*mz->width)+j].symbol != 'E'){
+            //printf("pos:%d visited:%d\n",(i*mz->width)+j,mz->grid[(i*mz->width)+j].visited);
+            if (!mz->grid[(i*mz->width)+j].visited){
                 mz->grid[(i*mz->width)+j].symbol = '#';
             }
             
