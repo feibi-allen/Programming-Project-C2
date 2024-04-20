@@ -14,8 +14,6 @@
 #define MIN_HEIGHT 5
 #define MAX_HEIGHT 100
 
-#define TRUE 0
-#define FALSE 1
 #define EXIT_SUCCESS 0
 #define EXIT_ARG_ERROR 1
 #define EXIT_FILE_ERROR 2
@@ -264,6 +262,10 @@ int pathDown(maze *maze, int pos){
     return 0;
 }
 
+/**
+ * @brief places paths in the last row of a maze with an even number of rows
+ * @param maze struct containing maze information
+ */
 void fillLastRow(maze *maze){
     int count = 0;
     while (count<maze->width){
@@ -291,6 +293,10 @@ void fillLastRow(maze *maze){
     }
 }
 
+/**
+ * @brief places paths in the last column of a maze with an even number of colums
+ * @param maze struct containing maze information
+ */
 void fillLastCol(maze *maze){
     int count = 0, height = maze->height;
     if (maze->height%2 ==0){
@@ -320,6 +326,10 @@ void fillLastCol(maze *maze){
     }
 }
 
+/**
+ * @brief for each path node, counts the number of connected path nodes and updates that node instance
+ * @param maze struct containing maze information
+ */
 void countEdges(maze *maze){
     for (int i = 0 ; i<maze->height*maze->width; i++){
         //printf("position:%d visitied:%d\n",i,maze->grid[i].visited);
@@ -341,6 +351,12 @@ void countEdges(maze *maze){
     }
 }
 
+/**
+ * @brief places the start of the maze in the first position it finds with the fewest connected paths
+ * (starting from top left and workign towards bottom right)
+ * @param maze struct containing maze information
+ * @return exits the function once a start has been placed so there is only one instance
+ */
 void addStart(maze *maze){
     for (int i = 0;i<maze->height*maze->width;i++){
         //printf("position %d has path edges:%d\n",i,maze->grid[i].pathEdges);
@@ -364,6 +380,12 @@ void addStart(maze *maze){
     }
 }
 
+/**
+ * @brief places the end of the maze in the first position it finds with the fewest connected paths
+ * (starting from the bottom right and workign towards top left)
+ * @param maze struct containing maze information
+ * @return exits the function once a end has been placed so there is only one instance
+ */
 void addEnd(maze *maze){
     for (int i = maze->height*maze->width-1;i>=0;i--){
         //printf("position %d has path edges:%d, visited:%d\n",i,maze->grid[i].pathEdges,maze->grid[i].visited);
@@ -395,6 +417,10 @@ void addEnd(maze *maze){
     }
 }
 
+/**
+ * @brief places a wall in any positions which are not a path or start or end
+ * @param maze struct containing maze information
+ */
 void fillWalls(maze *mz) {
     for (int i = 0; i < mz->height; i++)
     {
@@ -409,6 +435,10 @@ void fillWalls(maze *mz) {
     }
 }
 
+/**
+ * @brief displays the maze, used for development and debugging
+ * @param maze struct containing maze information
+ */
 void displayMaze(maze *mz)
 {
     printf("\n");
@@ -423,10 +453,16 @@ void displayMaze(maze *mz)
     printf("\n");
 }
 
-int readToFile(char *fileName, maze *maze){
+/**
+ * @brief writes the maze into the given file
+ * @param filename name of the file to write to given by user
+ * @param maze struct containing maze information
+ * @return 0 if file could not be opened, else 1
+ */
+int writeToFile(char *fileName, maze *maze){
     FILE *file = fopen(fileName, "w");
     if (file == NULL) {
-        return 1;
+        return 0;
     }
     for (int i = 0; i<maze->height*maze->width;i++){
         fprintf(file,"%c",maze->grid[i].symbol);
@@ -435,7 +471,7 @@ int readToFile(char *fileName, maze *maze){
         }
     }
     fclose(file);
-    return 0;
+    return 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -487,8 +523,10 @@ int main(int argc, char *argv[]) {
                 addStart(&maze);
                 addEnd(&maze);
                 fillWalls(&maze);
-                displayMaze(&maze);
-                readToFile(argv[1],&maze);
+                //displayMaze(&maze);
+                if (!writeToFile(argv[1],&maze)){
+                    return EXIT_FILE_ERROR;
+                }
                 return 0;
             }
             //printf("current position before pop: %d\n", maze.currentPos);
