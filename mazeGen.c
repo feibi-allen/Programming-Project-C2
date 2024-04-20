@@ -41,7 +41,11 @@ typedef struct __item
     struct __item *previous;
 } item;
 
-// modify pointer to head 
+/**
+ * @brief Pushes a node to the stack by changing address in pointer
+ * @param head pointer to the pointer to head
+ * @param maze struct containing maze information
+ */
 void push(item **head, maze *maze)
 {
     item *tmp = (item*)malloc(sizeof(item));
@@ -55,6 +59,10 @@ void push(item **head, maze *maze)
     (*head) = tmp;
 }
 
+/**
+ * @brief Pops a node off the stack and frees pointers
+ * @param head pointer to the pointer to head
+ */
 int pop(item **head){
     if ((*head)->previous == NULL){
         //printf("last node reached\n");
@@ -68,6 +76,12 @@ int pop(item **head){
     return TRUE;
 }
 
+/**
+ * @brief Allocated momory and initializes nodes for every position in the maze
+ * @param maze struct containing maze information
+ * @param height user inputed height of maze
+ * @param width  user inputed width of the maze
+ */
 void mazeStructSetup(maze *maze, int height, int width){
     maze->grid = (node *)malloc(height*width*sizeof(node));
     for (int i = 0; i<height*width; i++){
@@ -82,7 +96,11 @@ void mazeStructSetup(maze *maze, int height, int width){
     maze->width = width;
 }
 
-int pickStartnode(maze *maze){
+/**
+ * @brief Randomly picks a node in the maze to start generating from
+ * @param maze struct containing maze information
+ */
+void pickStartnode(maze *maze){
     srand(time(NULL));
     int col = rand()%((maze->width+1)/2)*2;
     int row = rand()%((maze->height+1)/2)*2;
@@ -95,19 +113,32 @@ int pickStartnode(maze *maze){
     maze->grid[maze->currentPos] = startNode;
 }
 
+/**
+ * @brief Checks if path can continue in the chosen direction
+ * @param maze struct containing maze information
+ * @param row row the path would continue to
+ * @param col  column the path would continue to
+ * @return 1 if direction is valid 0 if not
+ */
 int validDirection(maze *maze, int row, int col){
     //printf("row:%d, maxrow;%d, col:%d, maxcol:%d\n", row,maze->height-1, col,maze->width-1);
     if (row<0||row>=maze->height||col<0||col>=maze->width){
-        return FALSE;
+        return 0;
     }
     int position = (row*maze->width)+col;
     // check if already visited
     if (maze->grid[position].visited){
-        return FALSE;
+        return 0;
     }
-    return TRUE;
+    return 1;
 }
 
+/**
+ * @brief Creates a path to the next node
+ * @param maze struct containing maze information
+ * @param nextPos position that the path will branch to
+ * @param bridge  the position of the node inbetween the current node and the next node
+ */
 void moveToNextnode(maze *maze,int nextPos, int bridge){
     //printf("moving to %d:\n", nextnode);
     maze->grid[nextPos].symbol = '-';
@@ -117,10 +148,16 @@ void moveToNextnode(maze *maze,int nextPos, int bridge){
     maze->currentPos = nextPos;
 }
 
+/**
+ * @brief Randomly chooses a direction the path shoudl branch
+ * @param maze struct containing maze information
+ * @return 1 if all directions have been checked, else 0
+ */
 int pickDirection(maze *maze){
     if (maze->grid[maze->currentPos].exploredEdges == 4){
         return FALSE;
     }
+    // directions[] lists the directions which were visited to ensure all are checked
     int directions[] = {0,0,0,0};
     int row = maze->currentPos/maze->width;
     int col = maze->currentPos%maze->width;
@@ -135,53 +172,59 @@ int pickDirection(maze *maze){
         case 0:
             //north
             //printf("north\n");
-            if (validDirection(maze,row-2,col) == TRUE){
+            if (validDirection(maze,row-2,col)){
                 moveToNextnode(maze,maze->currentPos-(2*maze->width),maze->currentPos-maze->width);
-                return TRUE;
+                return 0;
             }
             break;
         case 1:
             //east
             //printf("east\n");
-            if (validDirection(maze,row,col+2)== TRUE){
+            if (validDirection(maze,row,col+2)){
                 moveToNextnode(maze,maze->currentPos+2,maze->currentPos+1);
-                return TRUE;
+                return 0;
             }
             break;
         case 2:
             //south
             //printf("south\n");
-            if (validDirection(maze,row+2,col)== TRUE){
+            if (validDirection(maze,row+2,col)){
                 moveToNextnode(maze,maze->currentPos+(2*maze->width),maze->currentPos+maze->width);
-                return TRUE;
+                return 0;
             }
             break;
         case 3:
             //west
             //printf("west\n");
-            if (validDirection(maze,row,col-2)== TRUE){;
+            if (validDirection(maze,row,col-2)){;
                 moveToNextnode(maze,maze->currentPos-2,maze->currentPos-1);
-                return TRUE;
+                return 0;
             }
             break;
         }
-        int allDirectionsChecked = TRUE;
+        int allDirectionsChecked = 1;
         for (int i = 0; i < 4; i++) {
             //printf("direction[%d]",i);
             if (directions[i] !=1){
-                allDirectionsChecked = FALSE;
+                allDirectionsChecked = 0;
             }
         }
         //printf("{%d,%d,%d,%d}\n", directions[0], directions[1], directions[2], directions[3]);
-        if (allDirectionsChecked == TRUE) {
+        if (allDirectionsChecked) {
             maze->grid[maze->currentPos].exploredEdges = 4;
-           return FALSE;  
+           return 1;  
         }
           
     }
 }
 
-int edgeAbove(maze *maze, int pos){
+/**
+ * @brief checks if there is a path above the given node
+ * @param maze struct containing maze information
+ * @param pos position being checked
+ * @return 1 if there is a path, else 0
+ */
+int pathAbove(maze *maze, int pos){
     if (pos<maze->width){
         return 0;
     }
@@ -191,7 +234,7 @@ int edgeAbove(maze *maze, int pos){
     return 0;
 }
 
-int edgeLeft(maze *maze, int pos){
+int pathLeft(maze *maze, int pos){
     if (pos%maze->width==0){
         return 0;
     }
@@ -201,7 +244,7 @@ int edgeLeft(maze *maze, int pos){
     return 0;
 }
 
-int edgeRight(maze *maze, int pos){
+int pathRight(maze *maze, int pos){
     if (pos%maze->width==maze->width-1){
         return 0;
     }
@@ -211,7 +254,7 @@ int edgeRight(maze *maze, int pos){
     return 0;
 }
 
-int edgeDown(maze *maze, int pos){
+int pathDown(maze *maze, int pos){
     if (pos != 0 && pos/maze->width==maze->height-1){
         return 0;
     }
@@ -233,13 +276,13 @@ void fillLastRow(maze *maze){
             char symbol = options[rand()%2];
             //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (edgeAbove(maze,pos)){
+            if (pathAbove(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
-            }else if (edgeLeft(maze,pos)){
+            }else if (pathLeft(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
-            }else if (edgeRight(maze,pos)){
+            }else if (pathRight(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
             }
@@ -262,13 +305,13 @@ void fillLastCol(maze *maze){
             char symbol = options[rand()%2];
             //printf("mazegrid[%d] != '-''#'\n",node);
             // check if it can connect to a path
-            if (edgeLeft(maze,pos)){
+            if (pathLeft(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
-            }else if (edgeAbove(maze,pos)){
+            }else if (pathAbove(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
-            }else if (edgeDown(maze,pos)){
+            }else if (pathDown(maze,pos)){
                 maze->grid[pos].symbol = symbol;
                 maze->grid[pos].visited = 1;
             }
@@ -283,16 +326,16 @@ void countEdges(maze *maze){
         if (maze->grid[i].symbol != '-'){
             continue;
         }
-        if (edgeAbove(maze,i)){
+        if (pathAbove(maze,i)){
             maze->grid[i].pathEdges++;
         }
-        if (edgeDown(maze,i)){
+        if (pathDown(maze,i)){
             maze->grid[i].pathEdges++;
         }
-        if (edgeLeft(maze,i)){
+        if (pathLeft(maze,i)){
             maze->grid[i].pathEdges++;
         }
-        if (edgeRight(maze,i)){
+        if (pathRight(maze,i)){
             maze->grid[i].pathEdges++;
         }
     }
