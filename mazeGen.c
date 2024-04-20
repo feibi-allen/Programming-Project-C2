@@ -64,14 +64,14 @@ void push(item **head, maze *maze)
 int pop(item **head){
     if ((*head)->previous == NULL){
         //printf("last node reached\n");
-        return FALSE;
+        return 1;
     }
     //printf("Free item %d\n", (*head)->node);
     item *tmp = *head;
     *head = (*head)->previous;
     free(tmp);
     //printf("Head item %d\n", (*head)->node);
-    return TRUE;
+    return 0;
 }
 
 /**
@@ -153,7 +153,7 @@ void moveToNextnode(maze *maze,int nextPos, int bridge){
  */
 int pickDirection(maze *maze){
     if (maze->grid[maze->currentPos].exploredEdges == 4){
-        return FALSE;
+        return 1;
     }
     // directions[] lists the directions which were visited to ensure all are checked
     int directions[] = {0,0,0,0};
@@ -512,7 +512,7 @@ int main(int argc, char *argv[]) {
             //printf("popping %d stack size %d\n",head->node, stack_cntr);
             //stack_cntr--;
             
-            if (pop(&head) == FALSE){
+            if (pop(&head)){
                 if (maze.height%2 == 0){
                     fillLastRow(&maze);
                 }
