@@ -106,7 +106,7 @@ void pickStartnode(maze *maze){
     maze->currentPos = (row*maze->width)+col;
     node startNode;
     startNode.visited = 1;
-    startNode.symbol = '-';
+    startNode.symbol = ' ';
     startNode.position = maze->currentPos;
     maze->grid[maze->currentPos] = startNode;
 }
@@ -139,9 +139,9 @@ int validDirection(maze *maze, int row, int col){
  */
 void moveToNextnode(maze *maze,int nextPos, int bridge){
     //printf("moving to %d:\n", nextnode);
-    maze->grid[nextPos].symbol = '-';
+    maze->grid[nextPos].symbol = ' ';
     maze->grid[nextPos].visited = 1;
-    maze->grid[bridge].symbol = '-';
+    maze->grid[bridge].symbol = ' ';
     maze->grid[bridge].visited = 1;
     maze->currentPos = nextPos;
 }
@@ -226,7 +226,7 @@ int pathAbove(maze *maze, int pos){
     if (pos<maze->width){
         return 0;
     }
-    if (maze->grid[pos-maze->width].symbol == '-'){
+    if (maze->grid[pos-maze->width].symbol == ' '){
         return 1;
     }
     return 0;
@@ -236,7 +236,7 @@ int pathLeft(maze *maze, int pos){
     if (pos%maze->width==0){
         return 0;
     }
-    if (maze->grid[pos-1].symbol == '-'){
+    if (maze->grid[pos-1].symbol == ' '){
         return 1;
     }
     return 0;
@@ -246,7 +246,7 @@ int pathRight(maze *maze, int pos){
     if (pos%maze->width==maze->width-1){
         return 0;
     }
-    if (maze->grid[pos+1].symbol == '-'){
+    if (maze->grid[pos+1].symbol == ' '){
         return 1;
     }
     return 0;
@@ -256,7 +256,7 @@ int pathDown(maze *maze, int pos){
     if (pos != 0 && pos/maze->width==maze->height-1){
         return 0;
     }
-    if (maze->grid[pos+maze->width].symbol == '-'){
+    if (maze->grid[pos+maze->width].symbol == ' '){
         return 1;
     }
     return 0;
@@ -274,9 +274,9 @@ void fillLastRow(maze *maze){
         //printf("maze->grid[%d] = %c\n",node, maze->grid[node]);
         if (!maze->grid[pos].visited){
             // decide if wall or path
-            char options[2] = {'#','-'};
+            char options[2] = {'#',' '};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != '-''#'\n",node);
+            //printf("mazegrid[%d] != ' ''#'\n",node);
             // check if it can connect to a path
             if (pathAbove(maze,pos)){
                 maze->grid[pos].symbol = symbol;
@@ -307,9 +307,9 @@ void fillLastCol(maze *maze){
         int pos = (row*maze->width)+maze->width-1;
         if (!maze->grid[pos].visited){
             // decide if wall or path
-            char options[2] = {'#','-'};
+            char options[2] = {'#',' '};
             char symbol = options[rand()%2];
-            //printf("mazegrid[%d] != '-''#'\n",node);
+            //printf("mazegrid[%d] != ' ''#'\n",node);
             // check if it can connect to a path
             if (pathLeft(maze,pos)){
                 maze->grid[pos].symbol = symbol;
@@ -333,7 +333,7 @@ void fillLastCol(maze *maze){
 void countEdges(maze *maze){
     for (int i = 0 ; i<maze->height*maze->width; i++){
         //printf("position:%d visitied:%d\n",i,maze->grid[i].visited);
-        if (maze->grid[i].symbol != '-'){
+        if (maze->grid[i].symbol != ' '){
             continue;
         }
         if (pathAbove(maze,i)){
@@ -527,6 +527,7 @@ int main(int argc, char *argv[]) {
                 if (!writeToFile(argv[1],&maze)){
                     return EXIT_FILE_ERROR;
                 }
+                free(maze.grid);
                 return 0;
             }
             //printf("current position before pop: %d\n", maze.currentPos);
